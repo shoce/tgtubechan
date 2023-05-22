@@ -1,0 +1,31 @@
+# https://github.com/bsord/helm-push
+# https://docs.github.com/en/actions/learn-github-actions/contexts
+name: helm
+permissions:
+  packages: write
+  contents: read
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: version
+        run: |
+          VERSION=$( date '+%y%m%d.%H%M.0' )
+          echo "VERSION:$VERSION"
+          sed -i -e "s/__VERSION__/$VERSION/g" helm/Chart.yaml
+          cat helm/Chart.yaml
+      - name: push
+        uses: bsord/helm-push@v4
+        with:
+          useOCIRegistry: true
+          registry-url:  oci://ghcr.io/${{ github.repository }}
+          username: ${{ github.repository_owner }}
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
+          chart-folder: helm
+
