@@ -8,15 +8,20 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'helm/**'
 jobs:
   build-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
       - name: version
         run: |
           VERSION=$( date '+%y%m%d.%H%M.0' )
           echo "VERSION:$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - uses: actions/checkout@v3
+      - name: chart version
+        run: |
           sed -i -e "s/__VERSION__/$VERSION/g" helm/Chart.yaml
           cat helm/Chart.yaml
       - name: push
