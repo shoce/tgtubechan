@@ -1,4 +1,4 @@
-FROM golang:1.21.0 as build
+FROM golang:1.21.1 as build
 WORKDIR /root/
 RUN apt update
 RUN apt -y -q install xz-utils
