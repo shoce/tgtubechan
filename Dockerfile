@@ -1,4 +1,6 @@
-FROM golang:1.21.1 as build
+
+# https://hub.docker.com/_/golang/tags
+FROM golang:1.21.3 as build
 WORKDIR /root/
 RUN apt update
 RUN apt -y -q install xz-utils
@@ -18,7 +20,8 @@ RUN go build -o tgytchan tgytchan.go
 RUN ls -l -a
 
 
-FROM alpine:3.18.0
+# https://hub.docker.com/_/alpine/tags
+FROM alpine:3.18.4
 RUN apk add --no-cache tzdata
 RUN apk add --no-cache gcompat && ln -s -f -v ld-linux-x86-64.so.2 /lib/libresolv.so.2
 RUN mkdir -p /opt/tgytchan/
@@ -27,4 +30,5 @@ COPY --from=build /root/tgytchan/tgytchan /opt/tgytchan/tgytchan
 RUN ls -l -a /opt/tgytchan/
 WORKDIR /opt/tgytchan/
 ENTRYPOINT ["./tgytchan"]
+
 
