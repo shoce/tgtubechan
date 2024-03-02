@@ -12,6 +12,7 @@ mv ./ffmpeg-*-amd64-static/ffmpeg ./ffmpeg
 
 go mod init github.com/shoce/tgytchan
 go get -a -u -v
+go get github.com/kkdai/youtube/v2@master
 go mod tidy
 
 GoFmt
