@@ -8,8 +8,8 @@ spec:
   concurrencyPolicy: Forbid
   suspend: false
   schedule: "{{ .Values.CronSchedule }}"
-  successfulJobsHistoryLimit: 6
-  failedJobsHistoryLimit: 6
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   jobTemplate:
     metadata:
       name: tgytchan
