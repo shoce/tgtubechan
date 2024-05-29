@@ -1,6 +1,6 @@
 
 # https://hub.docker.com/_/golang/tags
-FROM golang:1.22.2 as build
+FROM golang:1.22.3 as build
 WORKDIR /root/
 RUN apt update
 RUN apt -y -q install xz-utils
