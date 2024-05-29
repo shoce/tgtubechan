@@ -487,7 +487,7 @@ func init() {
 		os.Exit(1)
 	}
 	if TgChatId == "" {
-		tglog("ERROR %s", err)
+		tglog("ERROR TgChatId empty")
 		os.Exit(1)
 	}
 
@@ -509,7 +509,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	if v, e := GetVar("TgTitleUnquote"); e != nil {
+	if v, err := GetVar("TgTitleUnquote"); err != nil {
 		tglog("ERROR %s", err)
 		os.Exit(1)
 	} else if v != "" {
@@ -522,11 +522,11 @@ func init() {
 		os.Exit(1)
 	}
 	if YtKey == "" {
-		tglog("ERROR %s", err)
+		tglog("ERROR YtKey empty")
 		os.Exit(1)
 	}
 
-	if v, e := GetVar("YtMaxResults"); e != nil {
+	if v, err := GetVar("YtMaxResults"); err != nil {
 		tglog("ERROR %s", err)
 		os.Exit(1)
 	} else if v != "" {
@@ -562,7 +562,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	if v, e := GetVar("FfmpegPath"); e != nil {
+	if v, err := GetVar("FfmpegPath"); err != nil {
 		tglog("ERROR %s", err)
 		os.Exit(1)
 	} else if v != "" {
