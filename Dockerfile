@@ -11,7 +11,7 @@ RUN tar -x -J -f ffmpeg-release-$TARGETARCH-static.tar.xz
 RUN ls -l -a
 RUN mkdir -p /root/tgytchan/
 COPY tgytchan.go go.mod go.sum /root/tgytchan/
-RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgzebot/ffmpeg
+RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgytchan/ffmpeg
 RUN /root/tgytchan/ffmpeg -version
 WORKDIR /root/tgytchan/
 RUN go version
