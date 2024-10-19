@@ -4,4 +4,4 @@ description: Mirror a Youtube channel to a Telegram channel
 type: application
 version: __VERSION__
 appVersion: __VERSION__
-home: https://src.iriy.de/tgytchan/helm/index.html
+home: https://github.com/shoce/tgytchan/tree/main/helm/

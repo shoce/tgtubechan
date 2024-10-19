@@ -2,12 +2,11 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  namespace: {{ .Values.Namespace }}
   name: tgytchan
 spec:
   concurrencyPolicy: Forbid
   suspend: false
-  schedule: "{{ .Values.CronSchedule }}"
+  schedule: "{{ $.Values.CronSchedule }}"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -21,7 +20,7 @@ spec:
           containers:
           - name: tgytchan
             imagePullPolicy: Always
-            image: {{ .Values.ImageName }}:{{ .Values.ImageTag }}
+            image: {{ $.Values.ImageName }}:{{ $.Values.ImageTag }}
             envFrom:
               - configMapRef:
                   name: tgytchan

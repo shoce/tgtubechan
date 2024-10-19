@@ -10,7 +10,6 @@ https://core.telegram.org/bots/api
 curl -s -S -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz | tar -x -J
 mv ./ffmpeg-*-amd64-static/ffmpeg ./ffmpeg
 
-go mod init github.com/shoce/tgytchan
 go get -a -u -v
 go get github.com/kkdai/youtube/v2@master
 go mod tidy
