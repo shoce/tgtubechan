@@ -9,7 +9,7 @@ KvNamespaceId: ''
 TgToken: ''
 TgBossChatId: ''
 
-CronSchedule: ''
+CronSchedule: '*/16 * * * *'
 ImageName: ghcr.io/shoce/tgytchan
 ImageTag: ''
 
