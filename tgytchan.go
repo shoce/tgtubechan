@@ -83,7 +83,7 @@ var (
 func log(msg interface{}, args ...interface{}) {
 	t := time.Now().Local()
 	ts := fmt.Sprintf(
-		"%03dy."+"%02d%02dd."+"%02dh"+"%02dm.",
+		"Y%03d"+"D%02d%02d"+"T%02d%02d",
 		t.Year()%1000, t.Month(), t.Day(), t.Hour(), t.Minute(),
 	)
 	msgtext := fmt.Sprintf("%s %s", ts, msg) + NL
