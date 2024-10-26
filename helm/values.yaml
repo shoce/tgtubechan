@@ -9,8 +9,6 @@ KvNamespaceId: ""
 TgToken: ""
 TgBossChatId: ""
 
-Interval: 16m
-
 ImageName: ghcr.io/shoce/tgytchan
 ImageTag: ""
 
