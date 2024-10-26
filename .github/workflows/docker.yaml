@@ -17,10 +17,10 @@ jobs:
     steps:
       - name: version
         run: |
-          VERSION=$( date '+%y%m%d.%H%M.0' )
+          VERSION=$( date '+%y.%m%d.%H%M' )
           echo "VERSION:$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v2
       - name: Log into registry ${{ env.REGISTRY }}

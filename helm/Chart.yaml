@@ -5,3 +5,4 @@ type: application
 version: __VERSION__
 appVersion: __VERSION__
 home: https://github.com/shoce/tgytchan/tree/main/helm/
+

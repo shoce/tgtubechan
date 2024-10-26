@@ -16,10 +16,10 @@ jobs:
     steps:
       - name: version
         run: |
-          VERSION=$( date '+%y%m%d.%H%M.0' )
+          VERSION=$( date '+%y.%m%d.%H%M' )
           echo "VERSION:$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: chart version
         run: |
           sed -i -e "s/__VERSION__/$VERSION/g" helm/Chart.yaml

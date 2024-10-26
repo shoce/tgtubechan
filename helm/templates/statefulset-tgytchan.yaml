@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tgytchan
+  labels:
+    app: tgytchan
+spec:
+  selector:
+    matchLabels:
+      app: tgytchan
+  template:
+    metadata:
+      name: tgytchan
+      labels:
+        app: tgytchan
+    spec:
+      containers:
+        - name: tgytchan
+          imagePullPolicy: IfNotPresent
+          image: "{{ $.Values.ImageName }}:{{ $.Values.ImageTag }}"
+          envFrom:
+            - configMapRef:
+                name: tgytchan
+

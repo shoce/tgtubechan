@@ -2,14 +2,15 @@
 
 YamlConfigPath: tgytchan.yaml
 
-KvToken: ''
-KvAccountId: ''
-KvNamespaceId: ''
+KvToken: ""
+KvAccountId: ""
+KvNamespaceId: ""
 
-TgToken: ''
-TgBossChatId: ''
+TgToken: ""
+TgBossChatId: ""
 
-CronSchedule: '*/16 * * * *'
+Interval: 16m
+
 ImageName: ghcr.io/shoce/tgytchan
-ImageTag: ''
+ImageTag: ""
 
