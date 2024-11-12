@@ -19,7 +19,7 @@ RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgytchan/ffmpeg
 RUN /root/tgytchan/ffmpeg -version
 COPY tgytchan.go go.mod go.sum /root/tgytchan/
 RUN go version
-RUN go get -a -u -v
+RUN go get -u -v
 RUN ls -l -a
 RUN go build -o tgytchan tgytchan.go
 RUN ls -l -a
