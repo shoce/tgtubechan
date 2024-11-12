@@ -348,6 +348,7 @@ func processYtChannel() {
 		func(r *youtube.PlaylistItemListResponse) error {
 			for _, i := range r.Items {
 				if YtLastPublishedAt == "" || i.Snippet.PublishedAt > YtLastPublishedAt {
+					log("DEBUG YtLastPublishedAt:`%s` i.Snippet.PublishedAt:`%s`", YtLastPublishedAt, i.Snippet.PublishedAt)
 					videos = append(videos, *i.Snippet)
 				}
 			}
@@ -355,7 +356,7 @@ func processYtChannel() {
 		},
 	)
 	if err != nil {
-		tglog("playlistitems/list: %v", err)
+		tglog("ERROR playlistitems/list: %v", err)
 		os.Exit(1)
 	}
 
