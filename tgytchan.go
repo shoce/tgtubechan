@@ -374,7 +374,7 @@ func processYtChannel() {
 
 		vpatime, err = time.Parse(time.RFC3339, v.PublishedAt)
 		if err != nil {
-			tglog("parse PublishedAt time: %s", err)
+			tglog("time.Parse PublishedAt: %s", err)
 			os.Exit(1)
 		}
 
@@ -589,7 +589,7 @@ func processYtChannel() {
 }
 
 func tglog(msg interface{}, args ...interface{}) error {
-	log(msg, args)
+	log(msg, args...)
 	msgtext := fmt.Sprintf(fmt.Sprintf("%s", msg), args...) + NL
 
 	type TgSendMessageRequest struct {
