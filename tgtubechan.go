@@ -7,10 +7,7 @@ https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas
 
 https://core.telegram.org/bots/api
 
-curl -s -S -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz | tar -x -J
-mv ./ffmpeg-*-amd64-static/ffmpeg ./ffmpeg
-
-go get -a -u -v
+go get -u -v
 go get github.com/kkdai/youtube/v2@master
 go mod tidy
 

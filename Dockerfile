@@ -19,7 +19,7 @@ RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgtubechan/ffmpeg
 RUN /root/tgtubechan/ffmpeg -version
 COPY tgtubechan.go go.mod go.sum /root/tgtubechan/
 RUN go version
-RUN go get -u -v
+RUN go get -v
 RUN go build -o tgtubechan tgtubechan.go
 RUN ls -l -a
 
