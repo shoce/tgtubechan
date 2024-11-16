@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tgytchan
+  name: {{ $.Chart.Name }}
 data:
   YamlConfigPath: "{{ $.Values.YamlConfigPath }}"
   KvToken: "{{ $.Values.KvToken }}"

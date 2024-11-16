@@ -1,4 +1,4 @@
-module github.com/shoce/tgytchan
+module github.com/shoce/tgtubechan
 
 go 1.23
 

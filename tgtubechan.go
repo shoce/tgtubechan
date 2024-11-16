@@ -57,7 +57,7 @@ var (
 
 	Interval time.Duration
 
-	YamlConfigPath = "tgytchan.yaml"
+	YamlConfigPath = "tgtubechan.yaml"
 
 	KvToken       string
 	KvAccountId   string
@@ -257,7 +257,7 @@ func main() {
 	signal.Notify(sigterm, syscall.SIGTERM)
 	go func(sigterm chan os.Signal) {
 		<-sigterm
-		log("sigterm received")
+		log("%s: sigterm", os.Args[0])
 		os.Exit(1)
 	}(sigterm)
 

@@ -1,6 +1,6 @@
 ---
 
-YamlConfigPath: tgytchan.yaml
+YamlConfigPath: tgtubechan.yaml
 
 KvToken: ""
 KvAccountId: ""
@@ -9,6 +9,6 @@ KvNamespaceId: ""
 TgToken: ""
 TgBossChatId: ""
 
-ImageName: ghcr.io/shoce/tgytchan
+ImageName: ghcr.io/shoce/tgtubechan
 ImageTag: ""
 

@@ -12,16 +12,15 @@ RUN ls -l -a
 RUN tar -x -J -f ffmpeg-release-$TARGETARCH-static.tar.xz
 RUN ls -l -a
 
-RUN mkdir -p /root/tgytchan/
-WORKDIR /root/tgytchan/
+RUN mkdir -p /root/tgtubechan/
+WORKDIR /root/tgtubechan/
 
-RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgytchan/ffmpeg
-RUN /root/tgytchan/ffmpeg -version
-COPY tgytchan.go go.mod go.sum /root/tgytchan/
+RUN mv /root/ffmpeg-*-static/ffmpeg /root/tgtubechan/ffmpeg
+RUN /root/tgtubechan/ffmpeg -version
+COPY tgtubechan.go go.mod go.sum /root/tgtubechan/
 RUN go version
 RUN go get -u -v
-RUN ls -l -a
-RUN go build -o tgytchan tgytchan.go
+RUN go build -o tgtubechan tgtubechan.go
 RUN ls -l -a
 
 
@@ -29,11 +28,9 @@ RUN ls -l -a
 FROM alpine:3.20.3
 RUN apk add --no-cache tzdata
 RUN apk add --no-cache gcompat && ln -s -f -v ld-linux-x86-64.so.2 /lib/libresolv.so.2
-RUN mkdir -p /opt/tgytchan/
-WORKDIR /opt/tgytchan/
-COPY --from=build /root/tgytchan/ffmpeg /opt/tgytchan/ffmpeg
-COPY --from=build /root/tgytchan/tgytchan /opt/tgytchan/tgytchan
-RUN ls -l -a /opt/tgytchan/
-ENTRYPOINT ["./tgytchan"]
+COPY --from=build /root/tgtubechan/ffmpeg /bin/ffmpeg
+COPY --from=build /root/tgtubechan/tgtubechan /bin/tgtubechan
+RUN ls -l -a /bin/ffmpeg /bin/tgtubechan
+ENTRYPOINT ["/bin/tgtubechan"]
 
 

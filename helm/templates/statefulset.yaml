@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: tgytchan
+  name: {{ $.Chart.Name }}
   labels:
-    app: tgytchan
+    app: {{ $.Chart.Name }}
 spec:
   selector:
     matchLabels:
-      app: tgytchan
+      app: {{ $.Chart.Name }}
   template:
     metadata:
-      name: tgytchan
+      name: {{ $.Chart.Name }}
       labels:
-        app: tgytchan
+        app: {{ $.Chart.Name }}
     spec:
       containers:
-        - name: tgytchan
+        - name: {{ $.Chart.Name }}
           imagePullPolicy: IfNotPresent
           image: "{{ $.Values.ImageName }}:{{ $.Values.ImageTag }}"
           envFrom:
             - configMapRef:
-                name: tgytchan
+                name: {{ $.Chart.Name }}
 
