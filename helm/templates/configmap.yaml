@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Chart.Name }}
+  name: tgtubechan
 data:
   YamlConfigPath: "{{ $.Values.YamlConfigPath }}"
   KvToken: "{{ $.Values.KvToken }}"
