@@ -1,7 +1,7 @@
 
 
 # https://hub.docker.com/_/golang/tags
-FROM golang:1.23.2 AS build
+FROM golang:1.23.4 AS build
 ARG TARGETARCH
 WORKDIR /root/
 

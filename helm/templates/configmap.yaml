@@ -2,12 +2,21 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tgtubechan
+  name: {{ $.Release.Name }}-tgtubechan
+
 data:
+
+  DEBUG: "{{ $.Values.DEBUG }}"
+
   YamlConfigPath: "{{ $.Values.YamlConfigPath }}"
+
+  Interval: "{{ $.Values.Interval }}"
+
   KvToken: "{{ $.Values.KvToken }}"
   KvAccountId: "{{ $.Values.KvAccountId }}"
   KvNamespaceId: "{{ $.Values.KvNamespaceId }}"
+
   TgToken: "{{ $.Values.TgToken }}"
   TgBossChatId: "{{ $.Values.TgBossChatId }}"
+
 

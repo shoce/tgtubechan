@@ -2,24 +2,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: tgtubechan
+  name: {{ $.Release.Name }}-tgtubechan
   labels:
-    app: tgtubechan
+    app: {{ $.Release.Name }}-tgtubechan
 spec:
   selector:
     matchLabels:
-      app: tgtubechan
+      app: {{ $.Release.Name }}-tgtubechan
   template:
     metadata:
-      name: tgtubechan
+      name: {{ $.Release.Name }}-tgtubechan
       labels:
-        app: tgtubechan
+        app: {{ $.Release.Name }}-tgtubechan
     spec:
       containers:
-        - name: tgtubechan
+        - name: {{ $.Release.Name }}-tgtubechan
           imagePullPolicy: IfNotPresent
-          image: "{{ $.Values.ImageName }}:{{ $.Values.ImageTag }}"
+          image: "{{ $.Values.ImageNameTgTubeChan }}:{{ $.Values.ImageTagTgTubeChan }}"
           envFrom:
             - configMapRef:
-                name: tgtubechan
+                name: {{ $.Release.Name }}-tgtubechan
 

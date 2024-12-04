@@ -1,6 +1,10 @@
 ---
 
+DEBUG: false
+
 YamlConfigPath: tgtubechan.yaml
+
+Interval: 51m
 
 KvToken: ""
 KvAccountId: ""
@@ -9,6 +13,7 @@ KvNamespaceId: ""
 TgToken: ""
 TgBossChatId: ""
 
-ImageName: ghcr.io/shoce/tgtubechan
-ImageTag: ""
+ImageNameTgTubeChan: ghcr.io/shoce/tgtubechan
+ImageTagTgTubeChan: ""
+
 

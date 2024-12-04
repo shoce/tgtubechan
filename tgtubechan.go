@@ -120,25 +120,28 @@ func init() {
 		log("WARNING KvNamespaceId empty")
 	}
 
+	if s, err := GetVar("DEBUG"); err != nil {
+		log("ERROR %s", err)
+		os.Exit(1)
+	} else if s != "" {
+		DEBUG = true
+		log("DEBUG:true")
+	}
+
 	Ctx = context.TODO()
 	YtdlCl = youtubedl.Client{HTTPClient: &http.Client{}}
 
-	var IntervalString string
-	IntervalString, err = GetVar("Interval")
-	if err != nil {
-		tglog("ERROR %s", err)
-		os.Exit(1)
-	}
-	if IntervalString == "" {
+	if s, _ := GetVar("Interval"); s != "" {
+		Interval, err = time.ParseDuration(s)
+		if err != nil {
+			log("ERROR time.ParseDuration Interval:`%s`: %v", s, err)
+			os.Exit(1)
+		}
+		log("Interval: %v", Interval)
+	} else {
 		log("ERROR Interval empty")
 		os.Exit(1)
 	}
-	Interval, err = time.ParseDuration(IntervalString)
-	if err != nil {
-		log("ERROR time.ParseDuration Interval:`%s`: %v", IntervalString, err)
-		os.Exit(1)
-	}
-	log("Interval: %v", Interval)
 
 	TgToken, err = GetVar("TgToken")
 	if err != nil {
@@ -254,15 +257,16 @@ func main() {
 	signal.Notify(sigterm, syscall.SIGTERM)
 	go func(sigterm chan os.Signal) {
 		<-sigterm
-		log("%s: sigterm", os.Args[0])
+		tglog("%s: sigterm", os.Args[0])
 		os.Exit(1)
 	}(sigterm)
 
 	for {
 		t0 := time.Now()
+
 		processYtChannel()
-		dur := time.Now().Sub(t0)
-		if dur < Interval {
+
+		if dur := time.Now().Sub(t0); dur < Interval {
 			time.Sleep(Interval - dur)
 		}
 	}
@@ -735,24 +739,19 @@ func GetVar(name string) (value string, err error) {
 	}
 
 	value = os.Getenv(name)
-	if value != "" {
-		return value, nil
-	}
 
 	if YamlConfigPath != "" {
-		value, err = YamlGet(name)
-		if err != nil {
-			log("ERROR GetVar YamlGet %s: %v", name, err)
+		if v, err := YamlGet(name); err != nil {
+			log("ERROR GetVar YamlGet %s: %w", name, err)
 			return "", err
-		}
-		if value != "" {
-			return value, nil
+		} else if v != "" {
+			value = v
 		}
 	}
 
 	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
 		if v, err := KvGet(name); err != nil {
-			log("ERROR GetVar KvGet %s: %v", name, err)
+			log("ERROR GetVar KvGet %s: %w", name, err)
 			return "", err
 		} else {
 			value = v
