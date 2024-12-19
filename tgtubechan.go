@@ -7,10 +7,9 @@ https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas
 
 https://core.telegram.org/bots/api
 
-go get -u -v
 go get github.com/kkdai/youtube/v2@master
-go mod tidy
 
+GoGet
 GoFmt
 GoBuildNull
 
@@ -568,7 +567,7 @@ func processYtChannel() {
 			break
 		}
 
-		_, err = tgsendAudio(tgaudio.FileId)
+		_, err = tgsendAudio(tgaudio.FileId, fmt.Sprintf("youtu.be/%s", v.ResourceId.VideoId))
 		if err != nil {
 			tglog("tgsendAudio: %v", err)
 			break
@@ -916,6 +915,8 @@ func KvSet(name, value string) error {
 }
 
 func tgsendAudioFile(performer, title string, fileName string, audioBuf, thumbBuf *bytes.Buffer, duration time.Duration) (audio *TgAudio, err error) {
+	// https://core.telegram.org/bots/API#sending-files
+
 	var mpartBuf bytes.Buffer
 	mpart := multipart.NewWriter(&mpartBuf)
 	var formWr io.Writer
@@ -1021,10 +1022,14 @@ func tgsendAudioFile(performer, title string, fileName string, audioBuf, thumbBu
 	return audio, nil
 }
 
-func tgsendAudio(fileid string) (msg *TgMessage, err error) {
+func tgsendAudio(fileid string, caption string) (msg *TgMessage, err error) {
+	// https://core.telegram.org/bots/API#sendaudio
+
 	sendAudio := map[string]interface{}{
-		"chat_id": TgChatId,
-		"audio":   fileid,
+		"chat_id":    TgChatId,
+		"audio":      fileid,
+		"caption":    caption,
+		"parse_mode": "MarkdownV2",
 	}
 	sendAudioJSON, err := json.Marshal(sendAudio)
 	if err != nil {
