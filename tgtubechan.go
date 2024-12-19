@@ -71,6 +71,8 @@ var (
 	YtPlaylistId      string
 	YtLastPublishedAt string
 
+	TgApiUrlBase string = "https://api.telegram.org"
+
 	TgToken        string
 	TgChatId       string
 	TgBossChatId   string
@@ -141,6 +143,11 @@ func init() {
 	} else {
 		log("ERROR Interval empty")
 		os.Exit(1)
+	}
+
+	if v, _ := GetVar("TgApiUrlBase"); v != "" {
+		TgApiUrlBase = v
+		log("TgApiUrlBase:`%s`", TgApiUrlBase)
 	}
 
 	TgToken, err = GetVar("TgToken")
@@ -621,7 +628,7 @@ func tglog(msg interface{}, args ...interface{}) error {
 	smreqjsBuffer := bytes.NewBuffer(smreqjs)
 
 	var resp *http.Response
-	tgapiurl := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", TgToken)
+	tgapiurl := fmt.Sprintf("%s/bot%s/sendMessage", TgApiUrlBase, TgToken)
 	resp, err = http.Post(
 		tgapiurl,
 		"application/json",
@@ -987,7 +994,7 @@ func tgsendAudioFile(performer, title string, fileName string, audioBuf, thumbBu
 	}
 
 	resp, err := HttpClient.Post(
-		fmt.Sprintf("https://api.telegram.org/bot%s/sendAudio", TgToken),
+		fmt.Sprintf("%s/bot%s/sendAudio", TgApiUrlBase, TgToken),
 		mpart.FormDataContentType(),
 		&mpartBuf,
 	)
@@ -1038,7 +1045,7 @@ func tgsendAudio(fileid string, caption string) (msg *TgMessage, err error) {
 
 	var tgresp TgResponse
 	err = postJson(
-		fmt.Sprintf("https://api.telegram.org/bot%s/sendAudio", TgToken),
+		fmt.Sprintf("%s/bot%s/sendAudio", TgApiUrlBase, TgToken),
 		bytes.NewBuffer(sendAudioJSON),
 		&tgresp,
 	)
@@ -1087,7 +1094,7 @@ func tgsendPhotoFile(fileName string, photoBuf *bytes.Buffer, caption string) (p
 	}
 
 	resp, err := HttpClient.Post(
-		fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", TgToken),
+		fmt.Sprintf("%s/bot%s/sendPhoto", TgApiUrlBase, TgToken),
 		mpart.FormDataContentType(),
 		&mpartBuf,
 	)
@@ -1146,7 +1153,7 @@ func tgsendPhoto(fileid, caption string) (msg *TgMessage, err error) {
 
 	var tgresp TgResponse
 	err = postJson(
-		fmt.Sprintf("https://api.telegram.org/bot%s/sendPhoto", TgToken),
+		fmt.Sprintf("%s/bot%s/sendPhoto", TgApiUrlBase, TgToken),
 		bytes.NewBuffer(sendPhotoJSON),
 		&tgresp,
 	)
@@ -1178,7 +1185,7 @@ func tgsendMessage(message string) (msg *TgMessage, err error) {
 
 	var tgresp TgResponse
 	err = postJson(
-		fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", TgToken),
+		fmt.Sprintf("%s/bot%s/sendMessage", TgApiUrlBase, TgToken),
 		bytes.NewBuffer(sendMessageJSON),
 		&tgresp,
 	)
@@ -1208,7 +1215,7 @@ func tgdeleteMessage(messageid int64) error {
 
 	var tgresp TgResponseShort
 	err = postJson(
-		fmt.Sprintf("https://api.telegram.org/bot%s/deleteMessage", TgToken),
+		fmt.Sprintf("%s/bot%s/deleteMessage", TgApiUrlBase, TgToken),
 		bytes.NewBuffer(deleteMessageJSON),
 		&tgresp,
 	)
