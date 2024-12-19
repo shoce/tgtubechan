@@ -74,10 +74,11 @@ var (
 	TgToken        string
 	TgChatId       string
 	TgBossChatId   string
-	TgAudioBitrate string
 	TgPerformer    string
 	TgTitleCleanRe string
 	TgTitleUnquote bool
+
+	TgAudioBitrateKbps int64 = 60
 
 	FfmpegPath string = "/bin/ffmpeg"
 )
@@ -178,10 +179,13 @@ func init() {
 		os.Exit(1)
 	}
 
-	TgAudioBitrate, err = GetVar("TgAudioBitrate")
-	if err != nil {
-		tglog("ERROR %w", err)
-		os.Exit(1)
+	if s, _ := GetVar("TgAudioBitrateKbps"); s != "" {
+		if v, err := strconv.ParseInt(s, 10, 64); err == nil {
+			TgAudioBitrateKbps = v
+			log("TgAudioBitrateKbps:%v", TgAudioBitrateKbps)
+		} else {
+			log("WARNING invalid TgAudioBitrateKbps:`%s`", s)
+		}
 	}
 
 	TgTitleCleanRe, err = GetVar("TgTitleCleanRe")
@@ -496,13 +500,14 @@ func processYtChannel() {
 
 		audioFile := audioSrcFile
 
-		if FfmpegPath != "" && TgAudioBitrate != "" {
-			log("DEBUG target audio bitrate:%sbps", TgAudioBitrate)
-			audioFile = fmt.Sprintf("%s..%s..m4a", audioName, TgAudioBitrate)
+		if FfmpegPath != "" && TgAudioBitrateKbps > 0 {
+			log("DEBUG target audio bitrate:%dkbps", TgAudioBitrateKbps)
+			audioFile = fmt.Sprintf("%s..%dk..m4a", audioName, TgAudioBitrateKbps)
 			err = exec.Command(
 				FfmpegPath, "-v", "panic",
 				"-i", audioSrcFile,
-				"-b:a", TgAudioBitrate, audioFile,
+				"-b:a", fmt.Sprintf("%dk", TgAudioBitrateKbps),
+				audioFile,
 			).Run()
 			if err != nil {
 				tglog("ERROR ffmpeg: %w", err)
