@@ -605,10 +605,11 @@ func tglog(msg interface{}, args ...interface{}) error {
 	msgtext := fmt.Sprintf(fmt.Sprintf("%s", msg), args...) + NL
 
 	type TgSendMessageRequest struct {
-		ChatId              string `json:"chat_id"`
-		Text                string `json:"text"`
-		ParseMode           string `json:"parse_mode,omitempty"`
-		DisableNotification bool   `json:"disable_notification"`
+		ChatId                string `json:"chat_id"`
+		Text                  string `json:"text"`
+		ParseMode             string `json:"parse_mode,omitempty"`
+		DisableNotification   bool   `json:"disable_notification"`
+		DisableWebPagePreview bool   `json:"disable_web_page_preview"`
 	}
 
 	type TgSendMessageResponse struct {
@@ -620,10 +621,11 @@ func tglog(msg interface{}, args ...interface{}) error {
 	}
 
 	smreq := TgSendMessageRequest{
-		ChatId:              TgBossChatId,
-		Text:                msgtext,
-		ParseMode:           "",
-		DisableNotification: true,
+		ChatId:                TgBossChatId,
+		Text:                  msgtext,
+		ParseMode:             "",
+		DisableNotification:   true,
+		DisableWebPagePreview: true,
 	}
 	smreqjs, err := json.Marshal(smreq)
 	if err != nil {
@@ -1037,10 +1039,9 @@ func tgsendAudio(fileid string, caption string) (msg *TgMessage, err error) {
 	// https://core.telegram.org/bots/API#sendaudio
 
 	sendAudio := map[string]interface{}{
-		"chat_id":    TgChatId,
-		"audio":      fileid,
-		"caption":    caption,
-		"parse_mode": "MarkdownV2",
+		"chat_id": TgChatId,
+		"audio":   fileid,
+		"caption": caption,
 	}
 	sendAudioJSON, err := json.Marshal(sendAudio)
 	if err != nil {
