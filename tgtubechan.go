@@ -615,6 +615,10 @@ func processYtChannel() {
 			tglog("ERROR SetVar YtLastPublishedAt: %w", err)
 			break
 		}
+
+		if len(videos) > 10 {
+			time.Sleep(13 * time.Second)
+		}
 	}
 
 	return
