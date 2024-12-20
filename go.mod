@@ -40,3 +40,5 @@ require (
 	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.0 // indirect
 )
+
+replace github.com/kkdai/youtube/v2 => github.com/ruizlenato/youtube/v2 v2.0.0-20241207180344-3f95c0c6982d
