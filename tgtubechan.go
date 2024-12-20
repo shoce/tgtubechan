@@ -257,9 +257,10 @@ func init() {
 	if v, err := GetVar("FfmpegPath"); err != nil {
 		tglog("ERROR %w", err)
 		os.Exit(1)
-	} else if v != "" {
+	} else {
 		FfmpegPath = v
 	}
+	log("FfmpegPath:`%s`", FfmpegPath)
 }
 
 func main() {
