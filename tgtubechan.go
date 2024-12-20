@@ -425,24 +425,23 @@ func processYtChannel() {
 		var coverUrl, thumbUrl string
 		var coverBuf, thumbBuf, audioBuf *bytes.Buffer
 
-		coverUrl = v.Thumbnails.Maxres.Url
-		if coverUrl == "" {
+		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
+			coverUrl = v.Thumbnails.Maxres.Url
+		} else if v.Thumbnails.Standard != nil && v.Thumbnails.Standard.Url != "" {
 			coverUrl = v.Thumbnails.Standard.Url
-		}
-		if coverUrl == "" {
+		} else if v.Thumbnails.High != nil && v.Thumbnails.High.Url != "" {
 			coverUrl = v.Thumbnails.High.Url
-		}
-		if coverUrl == "" {
+		} else if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
 			coverUrl = v.Thumbnails.Medium.Url
-		}
-		if coverUrl == "" {
-			tglog("ERROR No cover url")
+		} else {
+			tglog("ERROR no cover url")
 			break
 		}
 
-		thumbUrl = v.Thumbnails.Medium.Url
-		if thumbUrl == "" {
-			tglog("ERROR No thumb url")
+		if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
+			thumbUrl = v.Thumbnails.Medium.Url
+		} else {
+			tglog("ERROR no thumb url")
 			break
 		}
 
@@ -451,14 +450,14 @@ func processYtChannel() {
 			tglog("ERROR Download cover: %w", err)
 			break
 		}
-		log("DEBUG Cover: %dkb", coverBuf.Len()/1000)
+		log("DEBUG cover: %dkb", coverBuf.Len()/1000)
 
 		thumbBuf, err = downloadFile(thumbUrl)
 		if err != nil {
 			tglog("ERROR Download thumb: %w", err)
 			break
 		}
-		log("DEBUG Thumb: %dkb", thumbBuf.Len()/1000)
+		log("DEBUG thumb: %dkb", thumbBuf.Len()/1000)
 
 		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
 		if err != nil {
