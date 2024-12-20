@@ -81,6 +81,8 @@ var (
 	TgTitleCleanRe string
 	TgTitleUnquote bool
 
+	TgVideosInterval time.Duration
+
 	TgAudioBitrateKbps int64 = 60
 
 	FfmpegPath string = "/bin/ffmpeg"
@@ -207,6 +209,18 @@ func init() {
 		os.Exit(1)
 	} else if v != "" {
 		TgTitleUnquote = true
+	}
+
+	if s, _ := GetVar("TgVideosInterval"); s != "" {
+		TgVideosInterval, err = time.ParseDuration(s)
+		if err != nil {
+			log("ERROR time.ParseDuration TgVideosInterval:`%s`: %v", s, err)
+			os.Exit(1)
+		}
+		log("TgVideosInterval: %v", TgVideosInterval)
+	} else {
+		log("ERROR TgVideosInterval empty")
+		os.Exit(1)
 	}
 
 	YtKey, err = GetVar("YtKey")
@@ -617,7 +631,7 @@ func processYtChannel() {
 		}
 
 		if len(videos) > 10 {
-			time.Sleep(17 * time.Second)
+			time.Sleep(TgVideosInterval)
 		}
 	}
 
