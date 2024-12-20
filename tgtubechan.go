@@ -617,7 +617,7 @@ func processYtChannel() {
 		}
 
 		if len(videos) > 10 {
-			time.Sleep(13 * time.Second)
+			time.Sleep(17 * time.Second)
 		}
 	}
 
