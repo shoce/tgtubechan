@@ -3,7 +3,7 @@ module github.com/shoce/tgtubechan
 go 1.23
 
 require (
-	github.com/kkdai/youtube/v2 v2.10.2-0.20241204003542-49f650404aac
+	github.com/kkdai/youtube/v2 v2.10.2-0.20241220143740-207c91bf7f4f
 	google.golang.org/api v0.214.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -40,5 +40,3 @@ require (
 	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.0 // indirect
 )
-
-replace github.com/kkdai/youtube/v2 => github.com/ruizlenato/youtube/v2 v2.0.0-20241207180344-3f95c0c6982d

@@ -79,6 +79,8 @@ github.com/googleapis/gax-go/v2 v2.14.1 h1:hb0FFeiPaQskmvakKu5EbCbpntQn48jyHuvrk
 github.com/googleapis/gax-go/v2 v2.14.1/go.mod h1:Hb/NubMaVM88SrNkvl8X/o8XWwDJEPqouaLeN2IUxoA=
 github.com/kkdai/youtube/v2 v2.10.2-0.20241204003542-49f650404aac h1:nz/xIfo1F1YLnkKgAPDsh7Wtzr/4tKQvXp0ziy9esUo=
 github.com/kkdai/youtube/v2 v2.10.2-0.20241204003542-49f650404aac/go.mod h1:4y1MIg7f1o5/kQfkr7nwXFtv8PGSoe4kChOB9/iMA88=
+github.com/kkdai/youtube/v2 v2.10.2-0.20241220143740-207c91bf7f4f h1:U1pd0H10ZaDm4GL6nlGuLPBWzcq4iFen/uP+8NF43ZE=
+github.com/kkdai/youtube/v2 v2.10.2-0.20241220143740-207c91bf7f4f/go.mod h1:4y1MIg7f1o5/kQfkr7nwXFtv8PGSoe4kChOB9/iMA88=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
