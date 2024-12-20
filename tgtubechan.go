@@ -471,7 +471,7 @@ func processYtChannel() {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
 				continue
 			}
-			if audioFormat.Bitrate == 0 || f.Bitrate < audioFormat.Bitrate {
+			if audioFormat.Bitrate == 0 || f.Bitrate > audioFormat.Bitrate {
 				audioFormat = f
 			}
 		}
