@@ -375,8 +375,15 @@ func processYtChannel() {
 
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
-	for _, v := range videos {
-		tglog("DEBUG «%s» youtu.be/%s %s", v.Title, v.ResourceId.VideoId, v.PublishedAt)
+	for j, v := range videos {
+		tglog(
+			"DEBUG "+NL+"%d/%d "+NL+"«%s» "+NL+"youtu.be/%s "+NL+"%s ",
+			j+1,
+			len(videos),
+			v.Title,
+			v.ResourceId.VideoId,
+			v.PublishedAt,
+		)
 
 		var vpatime time.Time
 		var vtitle string
