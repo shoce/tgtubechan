@@ -358,7 +358,6 @@ func processYtChannel() {
 		func(r *youtube.PlaylistItemListResponse) error {
 			for _, i := range r.Items {
 				if YtLastPublishedAt == "" || i.Snippet.PublishedAt > YtLastPublishedAt {
-					log("DEBUG YtLastPublishedAt:`%s` i.Snippet.PublishedAt:`%s`", YtLastPublishedAt, i.Snippet.PublishedAt)
 					videos = append(videos, *i.Snippet)
 				}
 			}
@@ -366,18 +365,18 @@ func processYtChannel() {
 		},
 	)
 	if err != nil {
-		tglog("ERROR playlistitems/list: %v", err)
+		tglog("ERROR playlistitems/list: %w", err)
 		os.Exit(1)
 	}
 
 	if len(videos) > 0 {
-		tglog("playlistitems/list: %d items", len(videos))
+		log("DEBUG playlistitems/list: %d items", len(videos))
 	}
 
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
 	for _, v := range videos {
-		tglog("%s «%s»", v.PublishedAt, v.Title)
+		tglog("DEBUG «%s» youtu.be/%s %s", v.Title, v.ResourceId.VideoId, v.PublishedAt)
 
 		var vpatime time.Time
 		var vtitle string
@@ -385,7 +384,7 @@ func processYtChannel() {
 
 		vpatime, err = time.Parse(time.RFC3339, v.PublishedAt)
 		if err != nil {
-			tglog("ERROR time.Parse PublishedAt: %s", err)
+			tglog("ERROR time.Parse PublishedAt: %w", err)
 			os.Exit(1)
 		}
 
@@ -413,9 +412,6 @@ func processYtChannel() {
 			vpatime.Hour(), vpatime.Minute(), vpatime.Second(),
 			v.ResourceId.VideoId,
 		)
-
-		log("New: %s %s «%s»", vpatime, v.ResourceId.VideoId, vtitle)
-		log("Description: %d letters", len([]rune(v.Description)))
 
 		var coverUrl, thumbUrl string
 		var coverBuf, thumbBuf, audioBuf *bytes.Buffer
