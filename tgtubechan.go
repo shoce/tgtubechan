@@ -631,6 +631,7 @@ func processYtChannel() {
 		}
 
 		if len(videos) > 10 {
+			log("sleeping %v", TgVideosInterval)
 			time.Sleep(TgVideosInterval)
 		}
 	}
