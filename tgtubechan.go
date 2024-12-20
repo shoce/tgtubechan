@@ -578,16 +578,36 @@ func processYtChannel() {
 			break
 		}
 
-		_, err = tgsendAudio(tgaudio.FileId, fmt.Sprintf("youtu.be/%s", v.ResourceId.VideoId))
+		_, err = tgsendAudio(
+			tgaudio.FileId,
+			fmt.Sprintf("%s"+NL+"%s"+NL+"youtu.be/%s", vtitle, TgPerformer, v.ResourceId.VideoId),
+		)
 		if err != nil {
 			tglog("ERROR tgsendAudio: %w", err)
 			break
 		}
 
-		_, err = tgsendMessage(v.Description)
-		if err != nil {
-			tglog("ERROR tgsendMessage: %w", err)
-			break
+		var spp []string
+		if len(v.Description) < 4000 {
+			spp = []string{v.Description}
+		} else {
+			var sp string
+			srs := strings.Split(v.Description, NL+NL)
+			for i, s := range srs {
+				sp += s + NL + NL
+				if i == len(srs)-1 || len(sp)+len(srs[i+1]) > 4000 {
+					spp = append(spp, sp)
+					sp = ""
+				}
+			}
+		}
+
+		for _, sp := range spp {
+			_, err = tgsendMessage(sp)
+			if err != nil {
+				tglog("ERROR tgsendMessage: %w", err)
+				break
+			}
 		}
 
 		err = SetVar("YtLastPublishedAt", vpatime.Format(time.RFC3339))
@@ -604,28 +624,12 @@ func tglog(msg interface{}, args ...interface{}) error {
 	log(msg, args...)
 	msgtext := fmt.Sprintf(fmt.Sprintf("%s", msg), args...) + NL
 
-	type TgSendMessageRequest struct {
-		ChatId                string `json:"chat_id"`
-		Text                  string `json:"text"`
-		ParseMode             string `json:"parse_mode,omitempty"`
-		DisableNotification   bool   `json:"disable_notification"`
-		DisableWebPagePreview bool   `json:"disable_web_page_preview"`
-	}
-
-	type TgSendMessageResponse struct {
-		OK          bool   `json:"ok"`
-		Description string `json:"description"`
-		Result      struct {
-			MessageId int64 `json:"message_id"`
-		} `json:"result"`
-	}
-
 	smreq := TgSendMessageRequest{
 		ChatId:                TgBossChatId,
 		Text:                  msgtext,
 		ParseMode:             "",
-		DisableNotification:   true,
 		DisableWebPagePreview: true,
+		DisableNotification:   true,
 	}
 	smreqjs, err := json.Marshal(smreq)
 	if err != nil {
@@ -654,6 +658,22 @@ func tglog(msg interface{}, args ...interface{}) error {
 	}
 
 	return nil
+}
+
+type TgSendMessageRequest struct {
+	ChatId                string `json:"chat_id"`
+	Text                  string `json:"text"`
+	ParseMode             string `json:"parse_mode,omitempty"`
+	DisableWebPagePreview bool   `json:"disable_web_page_preview"`
+	DisableNotification   bool   `json:"disable_notification"`
+}
+
+type TgSendMessageResponse struct {
+	OK          bool   `json:"ok"`
+	Description string `json:"description"`
+	Result      struct {
+		MessageId int64 `json:"message_id"`
+	} `json:"result"`
 }
 
 type TgResponse struct {
@@ -693,235 +713,59 @@ type TgMessage struct {
 	Photo     []TgPhotoSize `json:"photo"`
 }
 
-func getJson(url string, target interface{}) error {
-	r, err := HttpClient.Get(url)
-	if err != nil {
-		return err
+func tgsendMessage(message string) (msg *TgMessage, err error) {
+	sendMessage := TgSendMessageRequest{
+		ChatId:                TgChatId,
+		Text:                  message,
+		DisableWebPagePreview: true,
 	}
-	defer r.Body.Close()
-
-	return json.NewDecoder(r.Body).Decode(target)
-}
-
-func postJson(url string, data *bytes.Buffer, target interface{}) error {
-	resp, err := HttpClient.Post(
-		url,
-		"application/json",
-		data,
-	)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	respBody := bytes.NewBuffer(nil)
-	_, err = io.Copy(respBody, resp.Body)
-	if err != nil {
-		return fmt.Errorf("io.Copy: %v", err)
-	}
-
-	err = json.NewDecoder(respBody).Decode(target)
-	if err != nil {
-		return fmt.Errorf("Decode: %v", err)
-	}
-
-	return nil
-}
-
-func downloadFile(url string) (*bytes.Buffer, error) {
-	resp, err := HttpClient.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var bb = bytes.NewBuffer(nil)
-
-	_, err = io.Copy(bb, resp.Body)
+	sendMessageJSON, err := json.Marshal(sendMessage)
 	if err != nil {
 		return nil, err
 	}
 
-	return bb, nil
-}
-
-func GetVar(name string) (value string, err error) {
-	if DEBUG {
-		log("DEBUG GetVar: %s", name)
-	}
-
-	value = os.Getenv(name)
-
-	if YamlConfigPath != "" {
-		if v, err := YamlGet(name); err != nil {
-			log("ERROR GetVar YamlGet %s: %w", name, err)
-			return "", err
-		} else if v != "" {
-			value = v
-		}
-	}
-
-	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
-		if v, err := KvGet(name); err != nil {
-			log("ERROR GetVar KvGet %s: %w", name, err)
-			return "", err
-		} else {
-			value = v
-		}
-	}
-
-	return value, nil
-}
-
-func SetVar(name, value string) (err error) {
-	if DEBUG {
-		log("DEBUG SetVar: %s: %s", name, value)
-	}
-
-	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
-		err = KvSet(name, value)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	if YamlConfigPath != "" {
-		err = YamlSet(name, value)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	return fmt.Errorf("not kv credentials nor yaml config path provided to save to")
-}
-
-func YamlGet(name string) (value string, err error) {
-	configf, err := os.Open(YamlConfigPath)
-	if err != nil {
-		if DEBUG {
-			log("WARNING os.Open config file %s: %v", YamlConfigPath, err)
-		}
-		if os.IsNotExist(err) {
-			return "", nil
-		}
-		return "", err
-	}
-	defer configf.Close()
-
-	configm := make(map[interface{}]interface{})
-	if err = yaml.NewDecoder(configf).Decode(&configm); err != nil {
-		if DEBUG {
-			log("WARNING yaml.Decode %s: %v", YamlConfigPath, err)
-		}
-		return "", err
-	}
-
-	if v, ok := configm[name]; ok == true {
-		switch v.(type) {
-		case string:
-			value = v.(string)
-		case int:
-			value = fmt.Sprintf("%d", v.(int))
-		default:
-			return "", fmt.Errorf("yaml value of unsupported type, only string and int types are supported")
-		}
-	}
-
-	return value, nil
-}
-
-func YamlSet(name, value string) error {
-	configf, err := os.Open(YamlConfigPath)
-	if err == nil {
-		configm := make(map[interface{}]interface{})
-		err := yaml.NewDecoder(configf).Decode(&configm)
-		if err != nil {
-			log("WARNING yaml.Decode %s: %v", YamlConfigPath, err)
-		}
-		configf.Close()
-		configm[name] = value
-		configf, err := os.Create(YamlConfigPath)
-		if err == nil {
-			defer configf.Close()
-			confige := yaml.NewEncoder(configf)
-			err := confige.Encode(configm)
-			if err == nil {
-				confige.Close()
-				configf.Close()
-			} else {
-				log("WARNING yaml.Encoder.Encode: %v", err)
-				return err
-			}
-		} else {
-			log("WARNING os.Create config file %s: %v", YamlConfigPath, err)
-			return err
-		}
-	} else {
-		log("WARNING os.Open config file %s: %v", YamlConfigPath, err)
-		return err
-	}
-
-	return nil
-}
-
-func KvGet(name string) (value string, err error) {
-	req, err := http.NewRequest(
-		"GET",
-		fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/storage/kv/namespaces/%s/values/%s", KvAccountId, KvNamespaceId, name),
-		nil,
+	var tgresp TgResponse
+	err = postJson(
+		fmt.Sprintf("%s/bot%s/sendMessage", TgApiUrlBase, TgToken),
+		bytes.NewBuffer(sendMessageJSON),
+		&tgresp,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", KvToken))
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("kv api response status: %s", resp.Status)
+	if !tgresp.Ok {
+		return nil, fmt.Errorf("sendMessage: %s", tgresp.Description)
 	}
 
-	if rbb, err := io.ReadAll(resp.Body); err != nil {
-		return "", err
-	} else {
-		value = string(rbb)
-	}
+	msg = tgresp.Result
+	msg.Id = fmt.Sprintf("%d", msg.MessageId)
 
-	return value, nil
+	return msg, nil
 }
 
-func KvSet(name, value string) error {
-	mpbb := new(bytes.Buffer)
-	mpw := multipart.NewWriter(mpbb)
-	if err := mpw.WriteField("metadata", "{}"); err != nil {
+func tgdeleteMessage(messageid int64) error {
+	deleteMessage := map[string]interface{}{
+		"chat_id":    TgChatId,
+		"message_id": messageid,
+	}
+	deleteMessageJSON, err := json.Marshal(deleteMessage)
+	if err != nil {
 		return err
 	}
-	if err := mpw.WriteField("value", value); err != nil {
-		return err
-	}
-	mpw.Close()
 
-	req, err := http.NewRequest(
-		"PUT",
-		fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/storage/kv/namespaces/%s/values/%s", KvAccountId, KvNamespaceId, name),
-		mpbb,
+	var tgresp TgResponseShort
+	err = postJson(
+		fmt.Sprintf("%s/bot%s/deleteMessage", TgApiUrlBase, TgToken),
+		bytes.NewBuffer(deleteMessageJSON),
+		&tgresp,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("postJson: %v", err)
 	}
 
-	req.Header.Set("Content-Type", mpw.FormDataContentType())
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", KvToken))
-	resp, err := HttpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("kv api response status: %s", resp.Status)
+	if !tgresp.Ok {
+		return fmt.Errorf("deleteMessage: %s", tgresp.Description)
 	}
 
 	return nil
@@ -1176,60 +1020,235 @@ func tgsendPhoto(fileid, caption string) (msg *TgMessage, err error) {
 	return msg, nil
 }
 
-func tgsendMessage(message string) (msg *TgMessage, err error) {
-	sendMessage := map[string]interface{}{
-		"chat_id": TgChatId,
-		"text":    message,
-
-		"disable_web_page_preview": true,
-	}
-	sendMessageJSON, err := json.Marshal(sendMessage)
+func getJson(url string, target interface{}) error {
+	r, err := HttpClient.Get(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	defer r.Body.Close()
 
-	var tgresp TgResponse
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/sendMessage", TgApiUrlBase, TgToken),
-		bytes.NewBuffer(sendMessageJSON),
-		&tgresp,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendMessage: %s", tgresp.Description)
-	}
-
-	msg = tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	return msg, nil
+	return json.NewDecoder(r.Body).Decode(target)
 }
 
-func tgdeleteMessage(messageid int64) error {
-	deleteMessage := map[string]interface{}{
-		"chat_id":    TgChatId,
-		"message_id": messageid,
+func postJson(url string, data *bytes.Buffer, target interface{}) error {
+	resp, err := HttpClient.Post(
+		url,
+		"application/json",
+		data,
+	)
+	if err != nil {
+		return err
 	}
-	deleteMessageJSON, err := json.Marshal(deleteMessage)
+	defer resp.Body.Close()
+
+	respBody := bytes.NewBuffer(nil)
+	_, err = io.Copy(respBody, resp.Body)
+	if err != nil {
+		return fmt.Errorf("io.Copy: %v", err)
+	}
+
+	err = json.NewDecoder(respBody).Decode(target)
+	if err != nil {
+		return fmt.Errorf("Decode: %v", err)
+	}
+
+	return nil
+}
+
+func downloadFile(url string) (*bytes.Buffer, error) {
+	resp, err := HttpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var bb = bytes.NewBuffer(nil)
+
+	_, err = io.Copy(bb, resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return bb, nil
+}
+
+func GetVar(name string) (value string, err error) {
+	if DEBUG {
+		log("DEBUG GetVar: %s", name)
+	}
+
+	value = os.Getenv(name)
+
+	if YamlConfigPath != "" {
+		if v, err := YamlGet(name); err != nil {
+			log("ERROR GetVar YamlGet %s: %w", name, err)
+			return "", err
+		} else if v != "" {
+			value = v
+		}
+	}
+
+	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
+		if v, err := KvGet(name); err != nil {
+			log("ERROR GetVar KvGet %s: %w", name, err)
+			return "", err
+		} else {
+			value = v
+		}
+	}
+
+	return value, nil
+}
+
+func SetVar(name, value string) (err error) {
+	if DEBUG {
+		log("DEBUG SetVar: %s: %s", name, value)
+	}
+
+	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
+		err = KvSet(name, value)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if YamlConfigPath != "" {
+		err = YamlSet(name, value)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return fmt.Errorf("not kv credentials nor yaml config path provided to save to")
+}
+
+func YamlGet(name string) (value string, err error) {
+	configf, err := os.Open(YamlConfigPath)
+	if err != nil {
+		if DEBUG {
+			log("WARNING os.Open config file %s: %v", YamlConfigPath, err)
+		}
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	defer configf.Close()
+
+	configm := make(map[interface{}]interface{})
+	if err = yaml.NewDecoder(configf).Decode(&configm); err != nil {
+		if DEBUG {
+			log("WARNING yaml.Decode %s: %v", YamlConfigPath, err)
+		}
+		return "", err
+	}
+
+	if v, ok := configm[name]; ok == true {
+		switch v.(type) {
+		case string:
+			value = v.(string)
+		case int:
+			value = fmt.Sprintf("%d", v.(int))
+		default:
+			return "", fmt.Errorf("yaml value of unsupported type, only string and int types are supported")
+		}
+	}
+
+	return value, nil
+}
+
+func YamlSet(name, value string) error {
+	configf, err := os.Open(YamlConfigPath)
+	if err == nil {
+		configm := make(map[interface{}]interface{})
+		err := yaml.NewDecoder(configf).Decode(&configm)
+		if err != nil {
+			log("WARNING yaml.Decode %s: %v", YamlConfigPath, err)
+		}
+		configf.Close()
+		configm[name] = value
+		configf, err := os.Create(YamlConfigPath)
+		if err == nil {
+			defer configf.Close()
+			confige := yaml.NewEncoder(configf)
+			err := confige.Encode(configm)
+			if err == nil {
+				confige.Close()
+				configf.Close()
+			} else {
+				log("WARNING yaml.Encoder.Encode: %v", err)
+				return err
+			}
+		} else {
+			log("WARNING os.Create config file %s: %v", YamlConfigPath, err)
+			return err
+		}
+	} else {
+		log("WARNING os.Open config file %s: %v", YamlConfigPath, err)
+		return err
+	}
+
+	return nil
+}
+
+func KvGet(name string) (value string, err error) {
+	req, err := http.NewRequest(
+		"GET",
+		fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/storage/kv/namespaces/%s/values/%s", KvAccountId, KvNamespaceId, name),
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", KvToken))
+	resp, err := HttpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("kv api response status: %s", resp.Status)
+	}
+
+	if rbb, err := io.ReadAll(resp.Body); err != nil {
+		return "", err
+	} else {
+		value = string(rbb)
+	}
+
+	return value, nil
+}
+
+func KvSet(name, value string) error {
+	mpbb := new(bytes.Buffer)
+	mpw := multipart.NewWriter(mpbb)
+	if err := mpw.WriteField("metadata", "{}"); err != nil {
+		return err
+	}
+	if err := mpw.WriteField("value", value); err != nil {
+		return err
+	}
+	mpw.Close()
+
+	req, err := http.NewRequest(
+		"PUT",
+		fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/storage/kv/namespaces/%s/values/%s", KvAccountId, KvNamespaceId, name),
+		mpbb,
+	)
 	if err != nil {
 		return err
 	}
 
-	var tgresp TgResponseShort
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/deleteMessage", TgApiUrlBase, TgToken),
-		bytes.NewBuffer(deleteMessageJSON),
-		&tgresp,
-	)
+	req.Header.Set("Content-Type", mpw.FormDataContentType())
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", KvToken))
+	resp, err := HttpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("postJson: %v", err)
+		return err
 	}
-
-	if !tgresp.Ok {
-		return fmt.Errorf("deleteMessage: %s", tgresp.Description)
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("kv api response status: %s", resp.Status)
 	}
 
 	return nil
