@@ -130,7 +130,7 @@ func init() {
 		os.Exit(1)
 	} else if s != "" {
 		DEBUG = true
-		log("DEBUG:true")
+		log("DEBUG: true")
 	}
 
 	Ctx = context.TODO()
@@ -150,7 +150,7 @@ func init() {
 
 	if v, _ := GetVar("TgApiUrlBase"); v != "" {
 		TgApiUrlBase = v
-		log("TgApiUrlBase:`%s`", TgApiUrlBase)
+		log("TgApiUrlBase: `%s`", TgApiUrlBase)
 	}
 
 	TgToken, err = GetVar("TgToken")
@@ -192,7 +192,7 @@ func init() {
 	if s, _ := GetVar("TgAudioBitrateKbps"); s != "" {
 		if v, err := strconv.ParseInt(s, 10, 64); err == nil {
 			TgAudioBitrateKbps = v
-			log("TgAudioBitrateKbps:%v", TgAudioBitrateKbps)
+			log("TgAudioBitrateKbps: %v", TgAudioBitrateKbps)
 		} else {
 			log("WARNING invalid TgAudioBitrateKbps:`%s`", s)
 		}
@@ -275,7 +275,7 @@ func init() {
 	} else {
 		FfmpegPath = v
 	}
-	log("FfmpegPath:`%s`", FfmpegPath)
+	log("FfmpegPath: `%s`", FfmpegPath)
 }
 
 func main() {
