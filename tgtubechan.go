@@ -594,7 +594,7 @@ func processYtChannel() {
 
 		_, err = tgsendAudio(
 			tgaudio.FileId,
-			fmt.Sprintf("%s"+NL+"%s"+NL+"youtu.be/%s", vtitle, TgPerformer, v.ResourceId.VideoId),
+			fmt.Sprintf("%s "+NL+"%s "+NL+"youtu.be/%s %s ", vtitle, TgPerformer, v.ResourceId.VideoId, vinfo.Duration),
 		)
 		if err != nil {
 			tglog("ERROR tgsendAudio: %w", err)
