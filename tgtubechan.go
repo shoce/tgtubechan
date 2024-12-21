@@ -617,6 +617,9 @@ func processYtChannel() {
 		}
 
 		for _, sp := range spp {
+			if strings.TrimSpace(sp) == "" {
+				continue
+			}
 			_, err = tgsendMessage(sp)
 			if err != nil {
 				tglog("ERROR tgsendMessage: %w", err)
