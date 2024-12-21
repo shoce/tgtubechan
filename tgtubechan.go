@@ -624,7 +624,8 @@ func processYtChannel() {
 			}
 		}
 
-		err = SetVar("YtLastPublishedAt", vpatime.Format(time.RFC3339))
+		YtLastPublishedAt = vpatime.Format(time.RFC3339)
+		err = SetVar("YtLastPublishedAt", YtLastPublishedAt)
 		if err != nil {
 			tglog("ERROR SetVar YtLastPublishedAt: %w", err)
 			break
