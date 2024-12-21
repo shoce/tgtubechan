@@ -155,7 +155,7 @@ func init() {
 
 	TgToken, err = GetVar("TgToken")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 	if TgToken == "" {
@@ -165,7 +165,7 @@ func init() {
 
 	TgBossChatId, err = GetVar("TgBossChatId")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 	if TgBossChatId == "" {
@@ -175,7 +175,7 @@ func init() {
 
 	TgChatId, err = GetVar("TgChatId")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 	if TgChatId == "" {
@@ -185,7 +185,7 @@ func init() {
 
 	TgPerformer, err = GetVar("TgPerformer")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
@@ -200,12 +200,12 @@ func init() {
 
 	TgTitleCleanRe, err = GetVar("TgTitleCleanRe")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
 	if v, err := GetVar("TgTitleUnquote"); err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	} else if v != "" {
 		TgTitleUnquote = true
@@ -225,7 +225,7 @@ func init() {
 
 	YtKey, err = GetVar("YtKey")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 	if YtKey == "" {
@@ -234,43 +234,43 @@ func init() {
 	}
 
 	if v, err := GetVar("YtMaxResults"); err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	} else if v != "" {
 		YtMaxResults, err = strconv.ParseInt(v, 10, 0)
 		if err != nil {
-			log("ERROR invalid YtMaxResults: %w", err)
-			tglog("ERROR invalid YtMaxResults: %w", err)
+			log("ERROR invalid YtMaxResults: %v", err)
+			tglog("ERROR invalid YtMaxResults: %v", err)
 			os.Exit(1)
 		}
 	}
 
 	YtUsername, err = GetVar("YtUsername")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
 	YtChannelId, err = GetVar("YtChannelId")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
 	YtPlaylistId, err = GetVar("YtPlaylistId")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
 	YtLastPublishedAt, err = GetVar("YtLastPublishedAt")
 	if err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	}
 
 	if v, err := GetVar("FfmpegPath"); err != nil {
-		tglog("ERROR %w", err)
+		tglog("ERROR %v", err)
 		os.Exit(1)
 	} else {
 		FfmpegPath = v
@@ -342,7 +342,7 @@ func processYtChannel() {
 		}
 		channelslist, err := channelslistcall.Do()
 		if err != nil {
-			tglog("ERROR channels/list: %w", err)
+			tglog("ERROR channels/list: %v", err)
 			os.Exit(1)
 		}
 
@@ -381,7 +381,7 @@ func processYtChannel() {
 		},
 	)
 	if err != nil {
-		tglog("ERROR playlistitems/list: %w", err)
+		tglog("ERROR playlistitems/list: %v", err)
 		os.Exit(1)
 	}
 
@@ -407,7 +407,7 @@ func processYtChannel() {
 
 		vpatime, err = time.Parse(time.RFC3339, v.PublishedAt)
 		if err != nil {
-			tglog("ERROR time.Parse PublishedAt: %w", err)
+			tglog("ERROR time.Parse PublishedAt: %v", err)
 			os.Exit(1)
 		}
 
@@ -461,21 +461,21 @@ func processYtChannel() {
 
 		coverBuf, err = downloadFile(coverUrl)
 		if err != nil {
-			tglog("ERROR Download cover: %w", err)
+			tglog("ERROR download cover: %v", err)
 			break
 		}
 		log("DEBUG cover: %dkb", coverBuf.Len()/1000)
 
 		thumbBuf, err = downloadFile(thumbUrl)
 		if err != nil {
-			tglog("ERROR Download thumb: %w", err)
+			tglog("ERROR download thumb: %v", err)
 			break
 		}
 		log("DEBUG thumb: %dkb", thumbBuf.Len()/1000)
 
 		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
 		if err != nil {
-			tglog("ERROR GetVideoContext: %w", err)
+			tglog("ERROR GetVideoContext: %v", err)
 			// 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
 			// 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			break
@@ -493,7 +493,7 @@ func processYtChannel() {
 
 		ytstream, _, err := YtdlCl.GetStreamContext(Ctx, vinfo, &audioFormat)
 		if err != nil {
-			tglog("ERROR GetStreamContext: %w", err)
+			tglog("ERROR GetStreamContext: %v", err)
 			break
 		}
 		defer ytstream.Close()
@@ -501,7 +501,7 @@ func processYtChannel() {
 		audioBuf = bytes.NewBuffer(nil)
 		_, err = io.Copy(audioBuf, ytstream)
 		if err != nil {
-			tglog("ERROR copy stream: %w", err)
+			tglog("ERROR copy stream: %v", err)
 			break
 		}
 
@@ -519,7 +519,7 @@ func processYtChannel() {
 		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
 		err = ioutil.WriteFile(audioSrcFile, audioBuf.Bytes(), 0400)
 		if err != nil {
-			tglog("ERROR WriteFile %s: %w", audioSrcFile, err)
+			tglog("ERROR WriteFile %s: %v", audioSrcFile, err)
 			break
 		}
 
@@ -535,19 +535,19 @@ func processYtChannel() {
 				audioFile,
 			).Run()
 			if err != nil {
-				tglog("ERROR ffmpeg: %w", err)
+				tglog("ERROR ffmpeg: %v", err)
 				break
 			}
 
 			err = os.Remove(audioSrcFile)
 			if err != nil {
-				tglog("ERROR Remove %s: %w", audioSrcFile, err)
+				tglog("ERROR Remove %s: %v", audioSrcFile, err)
 			}
 		}
 
 		abb, err := ioutil.ReadFile(audioFile)
 		if err != nil {
-			tglog("ERROR ReadFile %s: %w", audioFile, err)
+			tglog("ERROR ReadFile %s: %v", audioFile, err)
 			break
 		}
 		audioBuf = bytes.NewBuffer(abb)
@@ -556,12 +556,12 @@ func processYtChannel() {
 
 		err = os.Remove(audioFile)
 		if err != nil {
-			tglog("ERROR Remove %s: %w", audioFile, err)
+			tglog("ERROR Remove %s: %v", audioFile, err)
 		}
 
 		tgcover, err := tgsendPhotoFile(audioName, coverBuf, vtitle)
 		if err != nil {
-			tglog("ERROR tgsendPhotoFile: %w", err)
+			tglog("ERROR tgsendPhotoFile: %v", err)
 			break
 		}
 		if tgcover.FileId == "" {
@@ -578,7 +578,7 @@ func processYtChannel() {
 			vinfo.Duration,
 		)
 		if err != nil {
-			tglog("ERROR tgsendAudioFile: %w", err)
+			tglog("ERROR tgsendAudioFile: %v", err)
 			break
 		}
 		if tgaudio.FileId == "" {
@@ -588,7 +588,7 @@ func processYtChannel() {
 
 		_, err = tgsendPhoto(tgcover.FileId, vtitle)
 		if err != nil {
-			tglog("ERROR tgsendPhoto: %w", err)
+			tglog("ERROR tgsendPhoto: %v", err)
 			break
 		}
 
@@ -597,7 +597,7 @@ func processYtChannel() {
 			fmt.Sprintf("%s "+NL+"%s "+NL+"youtu.be/%s %s ", vtitle, TgPerformer, v.ResourceId.VideoId, vinfo.Duration),
 		)
 		if err != nil {
-			tglog("ERROR tgsendAudio: %w", err)
+			tglog("ERROR tgsendAudio: %v", err)
 			break
 		}
 
@@ -622,7 +622,7 @@ func processYtChannel() {
 			}
 			_, err = tgsendMessage(sp)
 			if err != nil {
-				tglog("ERROR tgsendMessage: %w", err)
+				tglog("ERROR tgsendMessage: %v", err)
 				break
 			}
 		}
@@ -630,7 +630,7 @@ func processYtChannel() {
 		YtLastPublishedAt = vpatime.Format(time.RFC3339)
 		err = SetVar("YtLastPublishedAt", YtLastPublishedAt)
 		if err != nil {
-			tglog("ERROR SetVar YtLastPublishedAt: %w", err)
+			tglog("ERROR SetVar YtLastPublishedAt: %v", err)
 			break
 		}
 
@@ -1104,7 +1104,7 @@ func GetVar(name string) (value string, err error) {
 
 	if YamlConfigPath != "" {
 		if v, err := YamlGet(name); err != nil {
-			log("ERROR GetVar YamlGet %s: %w", name, err)
+			log("ERROR GetVar YamlGet %s: %v", name, err)
 			return "", err
 		} else if v != "" {
 			value = v
@@ -1113,7 +1113,7 @@ func GetVar(name string) (value string, err error) {
 
 	if KvToken != "" && KvAccountId != "" && KvNamespaceId != "" {
 		if v, err := KvGet(name); err != nil {
-			log("ERROR GetVar KvGet %s: %w", name, err)
+			log("ERROR GetVar KvGet %s: %v", name, err)
 			return "", err
 		} else {
 			value = v
