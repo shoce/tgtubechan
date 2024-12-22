@@ -359,7 +359,7 @@ func beats(td time.Duration) int {
 func ts() string {
 	t := time.Now().Local()
 	return fmt.Sprintf(
-		"%03d."+"%02d%02d."+"%02d%02d",
+		"%03d:"+"%02d%02d:"+"%02d%02d",
 		t.Year()%1000, t.Month(), t.Day(), t.Hour(), t.Minute(),
 	)
 }
@@ -1148,10 +1148,6 @@ func downloadFile(url string) (*bytes.Buffer, error) {
 }
 
 func GetVar(name string) (value string, err error) {
-	if DEBUG {
-		log("DEBUG GetVar `%s`", name)
-	}
-
 	value = os.Getenv(name)
 
 	if YamlConfigPath != "" {
