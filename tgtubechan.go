@@ -1219,9 +1219,6 @@ func SetVar(name, value string) (err error) {
 func YamlGet(name string) (value string, err error) {
 	configf, err := os.Open(YamlConfigPath)
 	if err != nil {
-		if DEBUG {
-			log("WARNING os.Open config file %s: %v", YamlConfigPath, err)
-		}
 		if os.IsNotExist(err) {
 			return "", nil
 		}
