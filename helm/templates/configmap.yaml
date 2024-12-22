@@ -12,6 +12,10 @@ data:
 
   Interval: "{{ $.Values.Interval }}"
 
+  EtcdEndpoint: "{{ $.Values.EtcdEndpoint }}"
+  EtcdRootPassword: "{{ $.Values.EtcdRootPassword }}"
+  EtcdKeyPrefix: "{{ $.Values.EtcdKeyPrefix }}"
+
   KvToken: "{{ $.Values.KvToken }}"
   KvAccountId: "{{ $.Values.KvAccountId }}"
   KvNamespaceId: "{{ $.Values.KvNamespaceId }}"

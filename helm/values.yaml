@@ -6,6 +6,10 @@ YamlConfigPath: tgtubechan.yaml
 
 Interval: 51m
 
+EtcdEndpoint: ""
+EtcdRootPassword: ""
+EtcdKeyPrefix: ""
+
 KvToken: ""
 KvAccountId: ""
 KvNamespaceId: ""
