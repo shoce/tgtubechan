@@ -89,9 +89,13 @@ var (
 
 	YtdlCl youtubedl.Client
 	YtSvc  *youtube.Service
+
+	TgTitleCleanRe *regexp.Regexp
 )
 
 func init() {
+	var err error
+
 	Ctx = context.TODO()
 
 	YtdlCl = youtubedl.Client{HTTPClient: &http.Client{}}
@@ -148,6 +152,14 @@ func init() {
 	if Config.TgAudioBitrateKbps == 0 {
 		log("ERROR TgAudioBitrateKbps empty")
 		os.Exit(1)
+	}
+
+	if Config.TgTitleCleanRe != "" {
+		TgTitleCleanRe, err = regexp.Compile(Config.TgTitleCleanRe)
+		if err != nil {
+			log("ERROR TgTitleCleanRe `%s`; %s", Config.TgTitleCleanRe, err)
+			os.Exit(1)
+		}
 	}
 
 	if Config.YtKey == "" {
@@ -298,8 +310,8 @@ func processYtChannel() {
 		}
 
 		vtitle = v.Title
-		if Config.TgTitleCleanRe != "" {
-			vtitle = regexp.MustCompile(Config.TgTitleCleanRe).ReplaceAllString(vtitle, "")
+		if TgTitleCleanRe != nil {
+			vtitle = TgTitleCleanRe.ReplaceAllString(vtitle, "")
 		}
 		if Config.TgTitleUnquote {
 			if strings.HasPrefix(vtitle, `"`) && strings.HasSuffix(vtitle, `"`) {
