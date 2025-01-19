@@ -14,11 +14,16 @@ spec:
       name: {{ $.Release.Name }}-tgtubechan
       labels:
         app: {{ $.Release.Name }}-tgtubechan
+      annotations:
+        checksum/configmap: {{ include ( print $.Template.BasePath "/" "configmap.yaml" ) . | sha256sum }}
+
     spec:
+
       containers:
+
         - name: {{ $.Release.Name }}-tgtubechan
-          imagePullPolicy: IfNotPresent
           image: "{{ $.Values.ImageNameTgTubeChan }}:{{ $.Values.ImageTagTgTubeChan }}"
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: {{ $.Release.Name }}-tgtubechan

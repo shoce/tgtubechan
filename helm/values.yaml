@@ -1,23 +1,7 @@
 ---
 
-DEBUG: false
-
-YamlConfigPath: tgtubechan.yaml
-
-Interval: 51m
-
-EtcdEndpoint: ""
-EtcdRootPassword: ""
-EtcdKeyPrefix: ""
-
-KvToken: ""
-KvAccountId: ""
-KvNamespaceId: ""
-
-TgToken: ""
-TgBossChatId: ""
-
 ImageNameTgTubeChan: ghcr.io/shoce/tgtubechan
 ImageTagTgTubeChan: ""
 
+YssUrl: https://yss/tgtubechan
 

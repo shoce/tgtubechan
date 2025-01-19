@@ -14,6 +14,7 @@ on:
       - main
     paths-ignore:
       - 'helm/**'
+      - '.github/workflows/helm.yaml'
 
 env:
   REGISTRY: ghcr.io
@@ -25,8 +26,7 @@ jobs:
 
       - name: version
         run: |
-          VERSION=$( date '+%y.%m%d.%H%M' )
-          echo "VERSION:$VERSION"
+          VERSION=$( date '+%y.%m%d.%H%M' | sed 's/\.0*/./g' )
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
