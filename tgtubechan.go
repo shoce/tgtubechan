@@ -37,7 +37,7 @@ import (
 	"syscall"
 	"time"
 
-	youtubedl "github.com/kkdai/youtube/v2"
+	ytdl "github.com/kkdai/youtube/v2"
 	youtubeoption "google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
 	yaml "gopkg.in/yaml.v3"
@@ -76,6 +76,8 @@ type TgTubeChanConfig struct {
 	YtPlaylistId      string `yaml:"YtPlaylistId"`
 	YtLastPublishedAt string `yaml:"YtLastPublishedAt"`
 
+	YtHttpClientUserAgent string `yaml:"YtHttpClientUserAgent"` // = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15"
+
 	FfmpegPath          string   `yaml:"FfmpegPath"`          // = "/bin/ffmpeg"
 	FfmpegGlobalOptions []string `yaml:"FfmpegGlobalOptions"` // = []string{"-v", "panic"}
 }
@@ -87,7 +89,7 @@ var (
 
 	HttpClient = &http.Client{}
 
-	YtdlCl youtubedl.Client
+	YtdlCl ytdl.Client
 	YtSvc  *youtube.Service
 
 	TgTitleCleanRe *regexp.Regexp
@@ -97,8 +99,6 @@ func init() {
 	var err error
 
 	Ctx = context.TODO()
-
-	YtdlCl = youtubedl.Client{HTTPClient: &http.Client{}}
 
 	if v := os.Getenv("YssUrl"); v != "" {
 		Config.YssUrl = v
@@ -188,6 +188,7 @@ func main() {
 	for {
 		t0 := time.Now()
 
+		YtdlCl = ytdl.Client{HTTPClient: &http.Client{Transport: &UserAgentTransport{http.DefaultTransport, Config.YtHttpClientUserAgent}}}
 		processYtChannel()
 
 		if dur := time.Now().Sub(t0); dur < Config.Interval {
@@ -379,7 +380,7 @@ func processYtChannel() {
 			break
 		}
 
-		var audioFormat youtubedl.Format
+		var audioFormat ytdl.Format
 		for _, f := range vinfo.Formats {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
 				continue
@@ -1046,4 +1047,14 @@ func (config *TgTubeChanConfig) Put() error {
 	}
 
 	return nil
+}
+
+type UserAgentTransport struct {
+	Transport http.RoundTripper
+	UserAgent string
+}
+
+func (uat *UserAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", uat.UserAgent)
+	return uat.Transport.RoundTrip(req)
 }
