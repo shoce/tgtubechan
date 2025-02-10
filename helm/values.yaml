@@ -1,7 +1,7 @@
 ---
 
-ImageNameTgTubeChan: ghcr.io/shoce/tgtubechan
-ImageTagTgTubeChan: ""
+ImageNameGithubTgTubeChan: ghcr.io/shoce/tgtubechan
+ImageTagGithubTgTubeChan: ""
 
 YssUrl: https://yss/tgtubechan
 

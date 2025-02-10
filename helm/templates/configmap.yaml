@@ -1,8 +1,11 @@
 ---
+
 apiVersion: v1
 kind: ConfigMap
+
 metadata:
   name: {{ $.Release.Name }}-tgtubechan
+  namespace: {{ $.Release.Namespace }}
 
 data:
 

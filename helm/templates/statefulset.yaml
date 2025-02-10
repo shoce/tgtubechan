@@ -1,10 +1,14 @@
 ---
+
 apiVersion: apps/v1
 kind: StatefulSet
+
 metadata:
   name: {{ $.Release.Name }}-tgtubechan
+  namespace: {{ $.Release.Namespace }}
   labels:
     app: {{ $.Release.Name }}-tgtubechan
+
 spec:
   selector:
     matchLabels:
@@ -22,9 +26,10 @@ spec:
       containers:
 
         - name: {{ $.Release.Name }}-tgtubechan
-          image: "{{ $.Values.ImageNameTgTubeChan }}:{{ $.Values.ImageTagTgTubeChan }}"
+          image: "{{ $.Values.ImageNameGithubTgTubeChan }}:{{ $.Values.ImageTagGithubTgTubeChan }}"
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: {{ $.Release.Name }}-tgtubechan
+
 
