@@ -188,7 +188,14 @@ func main() {
 	for {
 		t0 := time.Now()
 
-		YtdlCl = ytdl.Client{HTTPClient: &http.Client{Transport: &UserAgentTransport{http.DefaultTransport, Config.YtHttpClientUserAgent}}}
+		YtdlCl = ytdl.Client{
+			HTTPClient: &http.Client{
+				Transport: &UserAgentTransport{
+					http.DefaultTransport,
+					Config.YtHttpClientUserAgent,
+				},
+			},
+		}
 		processYtChannel()
 
 		if dur := time.Now().Sub(t0); dur < Config.Interval {
