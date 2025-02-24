@@ -87,6 +87,8 @@ var (
 
 	Ctx context.Context
 
+	LogTimeZone string
+
 	HttpClient = &http.Client{}
 
 	YtdlCl ytdl.Client
@@ -97,6 +99,9 @@ var (
 
 func init() {
 	var err error
+
+	LogTimeZone = time.Now().Local().Format("-0700")
+	LogTimeZone = strings.TrimRight(LogTimeZone, "0")
 
 	Ctx = context.TODO()
 
@@ -211,16 +216,16 @@ func beats(td time.Duration) int {
 }
 
 func ts() string {
-	t := time.Now().Local()
+	tnow := time.Now().Local()
 	return fmt.Sprintf(
-		"%03d:"+"%02d%02d:"+"%02d%02d",
-		t.Year()%1000, t.Month(), t.Day(), t.Hour(), t.Minute(),
+		"%d%02d%02d:%02d%02d%s",
+		tnow.Year()%1000, tnow.Month(), tnow.Day(),
+		tnow.Hour(), tnow.Minute(), LogTimeZone,
 	)
 }
 
-func log(msg interface{}, args ...interface{}) {
-	msgtext := fmt.Sprintf("%s %s", ts(), msg) + NL
-	fmt.Fprintf(os.Stderr, msgtext, args...)
+func log(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, ts()+" "+msg+NL, args...)
 }
 
 func processYtChannel() {
@@ -548,9 +553,9 @@ func processYtChannel() {
 	return
 }
 
-func tglog(msg interface{}, args ...interface{}) error {
+func tglog(msg string, args ...interface{}) error {
 	log(msg, args...)
-	msgtext := fmt.Sprintf(fmt.Sprintf("%s", msg), args...) + NL
+	msgtext := fmt.Sprintf(msg, args...) + NL
 
 	smreq := TgSendMessageRequest{
 		ChatId:                Config.TgBossChatId,
