@@ -133,6 +133,8 @@ func init() {
 		os.Exit(1)
 	}
 
+	tg.ApiUrlBase = Config.TgApiUrlBase
+
 	if Config.TgToken == "" {
 		log("ERROR TgToken empty")
 		os.Exit(1)
