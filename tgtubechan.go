@@ -21,18 +21,15 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -41,6 +38,8 @@ import (
 	youtubeoption "google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
 	yaml "gopkg.in/yaml.v3"
+
+	"github.com/shoce/tg"
 )
 
 const (
@@ -139,6 +138,8 @@ func init() {
 		os.Exit(1)
 	}
 
+	tg.TgToken = Config.TgToken
+
 	if Config.TgBossChatId == "" {
 		log("ERROR TgBossChatId empty")
 		os.Exit(1)
@@ -209,23 +210,6 @@ func main() {
 	}
 
 	return
-}
-
-func beats(td time.Duration) int {
-	return int(td / BEAT)
-}
-
-func ts() string {
-	tnow := time.Now().Local()
-	return fmt.Sprintf(
-		"%d%02d%02d:%02d%02d%s",
-		tnow.Year()%1000, tnow.Month(), tnow.Day(),
-		tnow.Hour(), tnow.Minute(), LogTimeZone,
-	)
-}
-
-func log(msg string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, ts()+" "+msg+NL, args...)
 }
 
 func processYtChannel() {
@@ -467,29 +451,40 @@ func processYtChannel() {
 
 		err = os.Remove(audioFile)
 		if err != nil {
-			tglog("ERROR Remove %s: %v", audioFile, err)
+			tglog("ERROR os.Remove %s: %v", audioFile, err)
 		}
 
-		tgcover, err := tgsendPhotoFile(audioName, coverBuf, vtitle)
+		tgcover, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
+			ChatId:   Config.TgChatId,
+			FileName: audioName,
+			Photo:    coverBuf,
+		})
 		if err != nil {
-			tglog("ERROR tgsendPhotoFile: %v", err)
+			tglog("ERROR tg.SendPhotoFile: %v", err)
 			break
 		}
-		if tgcover.FileId == "" {
-			tglog("ERROR tgsendPhotoFile: file_id empty")
+		var tgcovermax tg.PhotoSize
+		for _, p := range tgcover {
+			if p.Width > tgcovermax.Width {
+				tgcovermax = p
+			}
+		}
+		if tgcovermax.FileId == "" {
+			tglog("ERROR tg.SendPhotoFile: file_id empty")
 			break
 		}
 
-		tgaudio, err := tgsendAudioFile(
-			Config.TgPerformer,
-			vtitle,
-			audioName,
-			audioBuf,
-			thumbBuf,
-			vinfo.Duration,
-		)
+		tgaudio, err := tg.SendAudioFile(tg.SendAudioFileRequest{
+			ChatId:    Config.TgChatId,
+			Performer: Config.TgPerformer,
+			Title:     vtitle,
+			Duration:  vinfo.Duration,
+			FileName:  audioName,
+			Audio:     audioBuf,
+			Thumb:     thumbBuf,
+		})
 		if err != nil {
-			tglog("ERROR tgsendAudioFile: %v", err)
+			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
 		}
 		if tgaudio.FileId == "" {
@@ -497,18 +492,30 @@ func processYtChannel() {
 			break
 		}
 
-		_, err = tgsendPhoto(tgcover.FileId, vtitle)
+		photoCaption := vtitle
+		photoCaption = tg.Esc(photoCaption)
+		_, err = tg.SendPhoto(tg.SendPhotoRequest{
+			ChatId:  Config.TgChatId,
+			Photo:   tgcovermax.FileId,
+			Caption: photoCaption,
+		})
 		if err != nil {
-			tglog("ERROR tgsendPhoto: %v", err)
+			tglog("ERROR tg.SendPhoto: %v", err)
 			break
 		}
 
-		_, err = tgsendAudio(
-			tgaudio.FileId,
-			fmt.Sprintf("%s "+NL+"%s "+NL+"youtu.be/%s %s ", vtitle, Config.TgPerformer, v.ResourceId.VideoId, vinfo.Duration),
+		audioCaption := fmt.Sprintf(
+			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
+			vtitle, Config.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
 		)
+		audioCaption = tg.Esc(audioCaption)
+		_, err = tg.SendAudio(tg.SendAudioRequest{
+			ChatId:  Config.TgChatId,
+			Audio:   tgaudio.FileId,
+			Caption: audioCaption,
+		})
 		if err != nil {
-			tglog("ERROR tgsendAudio: %v", err)
+			tglog("ERROR tg.SendAudio: %v", err)
 			break
 		}
 
@@ -531,9 +538,14 @@ func processYtChannel() {
 			if strings.TrimSpace(sp) == "" {
 				continue
 			}
-			_, err = tgsendMessage(sp)
+			_, err = tg.SendMessage(tg.SendMessageRequest{
+				ChatId: Config.TgChatId,
+				Text:   tg.Esc(sp),
+
+				LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
+			})
 			if err != nil {
-				tglog("ERROR tgsendMessage: %v", err)
+				tglog("ERROR tg.SendMessage: %v", err)
 				break
 			}
 		}
@@ -553,441 +565,6 @@ func processYtChannel() {
 	return
 }
 
-func tglog(msg string, args ...interface{}) error {
-	log(msg, args...)
-	msgtext := fmt.Sprintf(msg, args...) + NL
-
-	smreq := TgSendMessageRequest{
-		ChatId:                Config.TgBossChatId,
-		Text:                  msgtext,
-		ParseMode:             "",
-		DisableWebPagePreview: true,
-		DisableNotification:   true,
-	}
-	smreqjs, err := json.Marshal(smreq)
-	if err != nil {
-		return fmt.Errorf("tglog json marshal: %w", err)
-	}
-	smreqjsBuffer := bytes.NewBuffer(smreqjs)
-
-	var resp *http.Response
-	tgapiurl := fmt.Sprintf("%s/bot%s/sendMessage", Config.TgApiUrlBase, Config.TgToken)
-	resp, err = http.Post(
-		tgapiurl,
-		"application/json",
-		smreqjsBuffer,
-	)
-	if err != nil {
-		return fmt.Errorf("tglog apiurl:`%s` apidata:`%s`: %w", tgapiurl, smreqjs, err)
-	}
-
-	var smresp TgSendMessageResponse
-	err = json.NewDecoder(resp.Body).Decode(&smresp)
-	if err != nil {
-		return fmt.Errorf("tglog decode response: %w", err)
-	}
-	if !smresp.OK {
-		return fmt.Errorf("tglog apiurl:`%s` apidata:`%s` api response not ok: %+v", tgapiurl, smreqjs, smresp)
-	}
-
-	return nil
-}
-
-type TgSendMessageRequest struct {
-	ChatId                string `json:"chat_id"`
-	Text                  string `json:"text"`
-	ParseMode             string `json:"parse_mode,omitempty"`
-	DisableWebPagePreview bool   `json:"disable_web_page_preview"`
-	DisableNotification   bool   `json:"disable_notification"`
-}
-
-type TgSendMessageResponse struct {
-	OK          bool   `json:"ok"`
-	Description string `json:"description"`
-	Result      struct {
-		MessageId int64 `json:"message_id"`
-	} `json:"result"`
-}
-
-type TgResponse struct {
-	Ok          bool       `json:"ok"`
-	Description string     `json:"description"`
-	Result      *TgMessage `json:"result"`
-}
-
-type TgResponseShort struct {
-	Ok          bool   `json:"ok"`
-	Description string `json:"description"`
-}
-
-type TgPhotoSize struct {
-	FileId       string `json:"file_id"`
-	FileUniqueId string `json:"file_unique_id"`
-	Width        int64  `json:"width"`
-	Height       int64  `json:"height"`
-	FileSize     int64  `json:"file_size"`
-}
-
-type TgAudio struct {
-	FileId       string      `json:"file_id"`
-	FileUniqueId string      `json:"file_unique_id"`
-	Duration     int64       `json:"duration"`
-	Performer    string      `json:"performer"`
-	Title        string      `json:"title"`
-	MimeType     string      `json:"mime_type"`
-	FileSize     int64       `json:"file_size"`
-	Thumb        TgPhotoSize `json:"thumb"`
-}
-
-type TgMessage struct {
-	Id        string
-	MessageId int64         `json:"message_id"`
-	Audio     TgAudio       `json:"audio"`
-	Photo     []TgPhotoSize `json:"photo"`
-}
-
-func tgsendMessage(message string) (msg *TgMessage, err error) {
-	sendMessage := TgSendMessageRequest{
-		ChatId:                Config.TgChatId,
-		Text:                  message,
-		DisableWebPagePreview: true,
-	}
-	sendMessageJSON, err := json.Marshal(sendMessage)
-	if err != nil {
-		return nil, err
-	}
-
-	var tgresp TgResponse
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/sendMessage", Config.TgApiUrlBase, Config.TgToken),
-		bytes.NewBuffer(sendMessageJSON),
-		&tgresp,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendMessage: %s", tgresp.Description)
-	}
-
-	msg = tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	return msg, nil
-}
-
-func tgdeleteMessage(messageid int64) error {
-	deleteMessage := map[string]interface{}{
-		"chat_id":    Config.TgChatId,
-		"message_id": messageid,
-	}
-	deleteMessageJSON, err := json.Marshal(deleteMessage)
-	if err != nil {
-		return err
-	}
-
-	var tgresp TgResponseShort
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/deleteMessage", Config.TgApiUrlBase, Config.TgToken),
-		bytes.NewBuffer(deleteMessageJSON),
-		&tgresp,
-	)
-	if err != nil {
-		return fmt.Errorf("postJson: %v", err)
-	}
-
-	if !tgresp.Ok {
-		return fmt.Errorf("deleteMessage: %s", tgresp.Description)
-	}
-
-	return nil
-}
-
-func tgsendAudioFile(performer, title string, fileName string, audioBuf, thumbBuf *bytes.Buffer, duration time.Duration) (audio *TgAudio, err error) {
-	// https://core.telegram.org/bots/API#sending-files
-
-	var mpartBuf bytes.Buffer
-	mpart := multipart.NewWriter(&mpartBuf)
-	var formWr io.Writer
-
-	// chat_id
-	formWr, err = mpart.CreateFormField("chat_id")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormField(`chat_id`): %v", err)
-	}
-	_, err = formWr.Write([]byte(Config.TgChatId))
-	if err != nil {
-		return nil, fmt.Errorf("Write(chat_id): %v", err)
-	}
-
-	// performer
-	formWr, err = mpart.CreateFormField("performer")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormField(`performer`): %v", err)
-	}
-	_, err = formWr.Write([]byte(performer))
-	if err != nil {
-		return nil, fmt.Errorf("Write(performer): %v", err)
-	}
-
-	// title
-	formWr, err = mpart.CreateFormField("title")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormField(`title`): %v", err)
-	}
-	_, err = formWr.Write([]byte(title))
-	if err != nil {
-		return nil, fmt.Errorf("Write(title): %v", err)
-	}
-
-	// audio
-	formWr, err = mpart.CreateFormFile("audio", fileName)
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormFile('audio'): %v", err)
-	}
-	_, err = io.Copy(formWr, audioBuf)
-	if err != nil {
-		return nil, fmt.Errorf("Copy audio: %v", err)
-	}
-
-	// thumb
-	formWr, err = mpart.CreateFormFile("thumb", fileName+".thumb")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormFile(`thumb`): %v", err)
-	}
-	_, err = io.Copy(formWr, thumbBuf)
-	if err != nil {
-		return nil, fmt.Errorf("Copy thumb: %v", err)
-	}
-
-	// duration
-	formWr, err = mpart.CreateFormField("duration")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormField(`duration`): %v", err)
-	}
-	_, err = formWr.Write([]byte(strconv.Itoa(int(duration.Seconds()))))
-	if err != nil {
-		return nil, fmt.Errorf("Write(duration): %v", err)
-	}
-
-	err = mpart.Close()
-	if err != nil {
-		return nil, fmt.Errorf("multipartWriter.Close: %v", err)
-	}
-
-	resp, err := HttpClient.Post(
-		fmt.Sprintf("%s/bot%s/sendAudio", Config.TgApiUrlBase, Config.TgToken),
-		mpart.FormDataContentType(),
-		&mpartBuf,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("Post: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var tgresp TgResponse
-	err = json.NewDecoder(resp.Body).Decode(&tgresp)
-	if err != nil {
-		return nil, fmt.Errorf("Decode: %v", err)
-	}
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendAudio: %s", tgresp.Description)
-	}
-
-	msg := tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	audio = &msg.Audio
-
-	if audio.FileId == "" {
-		return nil, fmt.Errorf("sendAudio: Audio.FileId empty")
-	}
-
-	err = tgdeleteMessage(msg.MessageId)
-	if err != nil {
-		return nil, fmt.Errorf("tgdeleteMessage(%d): %v", msg.MessageId, err)
-	}
-
-	return audio, nil
-}
-
-func tgsendAudio(fileid string, caption string) (msg *TgMessage, err error) {
-	// https://core.telegram.org/bots/API#sendaudio
-
-	sendAudio := map[string]interface{}{
-		"chat_id": Config.TgChatId,
-		"audio":   fileid,
-		"caption": caption,
-	}
-	sendAudioJSON, err := json.Marshal(sendAudio)
-	if err != nil {
-		return nil, err
-	}
-
-	var tgresp TgResponse
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/sendAudio", Config.TgApiUrlBase, Config.TgToken),
-		bytes.NewBuffer(sendAudioJSON),
-		&tgresp,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendAudio: %s", tgresp.Description)
-	}
-
-	msg = tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	return msg, nil
-}
-
-func tgsendPhotoFile(fileName string, photoBuf *bytes.Buffer, caption string) (photo *TgPhotoSize, err error) {
-	var mpartBuf bytes.Buffer
-	mpart := multipart.NewWriter(&mpartBuf)
-	var formWr io.Writer
-
-	// chat_id
-	formWr, err = mpart.CreateFormField("chat_id")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormField(`chat_id`): %v", err)
-	}
-	_, err = formWr.Write([]byte(Config.TgChatId))
-	if err != nil {
-		return nil, fmt.Errorf("Write(chat_id): %v", err)
-	}
-
-	// photo
-	formWr, err = mpart.CreateFormFile("photo", fileName+".cover")
-	if err != nil {
-		return nil, fmt.Errorf("CreateFormFile(`photo`): %v", err)
-	}
-	_, err = io.Copy(formWr, photoBuf)
-	if err != nil {
-		return nil, fmt.Errorf("Copy photo: %v", err)
-	}
-
-	err = mpart.Close()
-	if err != nil {
-		return nil, fmt.Errorf("multipartWriter.Close: %v", err)
-	}
-
-	resp, err := HttpClient.Post(
-		fmt.Sprintf("%s/bot%s/sendPhoto", Config.TgApiUrlBase, Config.TgToken),
-		mpart.FormDataContentType(),
-		&mpartBuf,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("Post: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var tgresp TgResponse
-	err = json.NewDecoder(resp.Body).Decode(&tgresp)
-	if err != nil {
-		return nil, fmt.Errorf("Decode: %v", err)
-	}
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendPhoto: %s", tgresp.Description)
-	}
-
-	msg := tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	if len(msg.Photo) == 0 {
-		return nil, fmt.Errorf("sendPhoto: Photo empty")
-	}
-
-	photo = &TgPhotoSize{}
-	for _, p := range msg.Photo {
-		if p.Width > photo.Width {
-			photo = &p
-		}
-	}
-
-	if photo.FileId == "" {
-		return nil, fmt.Errorf("sendPhoto: Photo.FileId empty")
-	}
-
-	err = tgdeleteMessage(msg.MessageId)
-	if err != nil {
-		return nil, fmt.Errorf("tgdeleteMessage(%d): %v", msg.MessageId, err)
-	}
-
-	return photo, nil
-}
-
-func tgsendPhoto(fileid, caption string) (msg *TgMessage, err error) {
-	caption = fmt.Sprintf("<u><b>%s</b></u>", caption)
-	sendPhoto := map[string]interface{}{
-		"chat_id":    Config.TgChatId,
-		"photo":      fileid,
-		"caption":    caption,
-		"parse_mode": "HTML",
-	}
-	sendPhotoJSON, err := json.Marshal(sendPhoto)
-	if err != nil {
-		return nil, err
-	}
-
-	var tgresp TgResponse
-	err = postJson(
-		fmt.Sprintf("%s/bot%s/sendPhoto", Config.TgApiUrlBase, Config.TgToken),
-		bytes.NewBuffer(sendPhotoJSON),
-		&tgresp,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if !tgresp.Ok {
-		return nil, fmt.Errorf("sendPhoto: %s", tgresp.Description)
-	}
-
-	msg = tgresp.Result
-	msg.Id = fmt.Sprintf("%d", msg.MessageId)
-
-	return msg, nil
-}
-
-func getJson(url string, target interface{}) error {
-	r, err := HttpClient.Get(url)
-	if err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	return json.NewDecoder(r.Body).Decode(target)
-}
-
-func postJson(url string, data *bytes.Buffer, target interface{}) error {
-	resp, err := HttpClient.Post(
-		url,
-		"application/json",
-		data,
-	)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	respBody := bytes.NewBuffer(nil)
-	_, err = io.Copy(respBody, resp.Body)
-	if err != nil {
-		return fmt.Errorf("io.Copy: %v", err)
-	}
-
-	err = json.NewDecoder(respBody).Decode(target)
-	if err != nil {
-		return fmt.Errorf("Decode: %v", err)
-	}
-
-	return nil
-}
-
 func downloadFile(url string) (*bytes.Buffer, error) {
 	resp, err := HttpClient.Get(url)
 	if err != nil {
@@ -1003,6 +580,47 @@ func downloadFile(url string) (*bytes.Buffer, error) {
 	}
 
 	return bb, nil
+}
+
+type UserAgentTransport struct {
+	Transport http.RoundTripper
+	UserAgent string
+}
+
+func (uat *UserAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", uat.UserAgent)
+	return uat.Transport.RoundTrip(req)
+}
+
+func beats(td time.Duration) int {
+	return int(td / BEAT)
+}
+
+func ts() string {
+	tnow := time.Now().Local()
+	return fmt.Sprintf(
+		"%d%02d%02d:%02d%02d%s",
+		tnow.Year()%1000, tnow.Month(), tnow.Day(),
+		tnow.Hour(), tnow.Minute(), LogTimeZone,
+	)
+}
+
+func log(msg string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, ts()+" "+msg+NL, args...)
+}
+
+func tglog(msg string, args ...interface{}) (err error) {
+	log(msg, args...)
+	text := fmt.Sprintf(msg, args...) + NL
+	text = tg.Esc(text)
+	_, err = tg.SendMessage(tg.SendMessageRequest{
+		ChatId: Config.TgBossChatId,
+		Text:   text,
+
+		DisableNotification: true,
+		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
+	})
+	return err
 }
 
 func (config *TgTubeChanConfig) Get() error {
@@ -1059,14 +677,4 @@ func (config *TgTubeChanConfig) Put() error {
 	}
 
 	return nil
-}
-
-type UserAgentTransport struct {
-	Transport http.RoundTripper
-	UserAgent string
-}
-
-func (uat *UserAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", uat.UserAgent)
-	return uat.Transport.RoundTrip(req)
 }
