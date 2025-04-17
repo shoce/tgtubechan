@@ -133,14 +133,14 @@ func init() {
 		os.Exit(1)
 	}
 
-	tg.ApiUrlBase = Config.TgApiUrlBase
+	tg.ApiUrl = Config.TgApiUrlBase
 
 	if Config.TgToken == "" {
 		log("ERROR TgToken empty")
 		os.Exit(1)
 	}
 
-	tg.TgToken = Config.TgToken
+	tg.ApiToken = Config.TgToken
 
 	if Config.TgBossChatId == "" {
 		log("ERROR TgBossChatId empty")
