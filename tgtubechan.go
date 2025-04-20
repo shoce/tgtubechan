@@ -495,7 +495,7 @@ func processYtChannel() {
 		}
 
 		photoCaption := vtitle
-		photoCaption = tg.Esc(photoCaption)
+		photoCaption = tg.BoldUnderline(photoCaption)
 		_, err = tg.SendPhoto(tg.SendPhotoRequest{
 			ChatId:  Config.TgChatId,
 			Photo:   tgcovermax.FileId,
