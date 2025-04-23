@@ -481,7 +481,6 @@ func processYtChannel() {
 			Performer: Config.TgPerformer,
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
-			FileName:  audioName,
 			Audio:     audioBuf,
 			Thumb:     thumbBuf,
 		})
@@ -599,7 +598,7 @@ func beats(td time.Duration) int {
 }
 
 func ts() string {
-	tnow := time.Now().Local()
+	tnow := time.Now().In(time.FixedZone("IST", 330*60))
 	return fmt.Sprintf(
 		"%d%02d%02d:%02d%02d%s",
 		tnow.Year()%1000, tnow.Month(), tnow.Day(),
