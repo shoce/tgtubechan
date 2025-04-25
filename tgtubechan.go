@@ -86,8 +86,6 @@ var (
 
 	Ctx context.Context
 
-	LogTimeZone string
-
 	HttpClient = &http.Client{}
 
 	YtdlCl ytdl.Client
@@ -98,9 +96,6 @@ var (
 
 func init() {
 	var err error
-
-	LogTimeZone = time.Now().Local().Format("-0700")
-	LogTimeZone = strings.TrimRight(LogTimeZone, "0")
 
 	Ctx = context.TODO()
 
@@ -476,25 +471,22 @@ func processYtChannel() {
 			break
 		}
 
-		tgaudio, err := tg.SendAudioFile(tg.SendAudioFileRequest{
+		var tgaudio *tg.Audio
+		if tgmsg, err := tg.SendAudioFile(tg.SendAudioFileRequest{
 			ChatId:    Config.TgChatId,
 			Performer: Config.TgPerformer,
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
 			Audio:     audioBuf,
 			Thumb:     thumbBuf,
-		})
-		if err != nil {
+		}); err != nil {
 			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
-		}
-		if tgaudio.FileId == "" {
-			tglog("ERROR tgsendAudioFile: file_id empty")
-			break
+		} else {
+			tgaudio = &tgmsg.Audio
 		}
 
-		photoCaption := vtitle
-		photoCaption = tg.BoldUnderline(photoCaption)
+		photoCaption := tg.BoldUnderline(vtitle)
 		_, err = tg.SendPhoto(tg.SendPhotoRequest{
 			ChatId:  Config.TgChatId,
 			Photo:   tgcovermax.FileId,
@@ -505,11 +497,10 @@ func processYtChannel() {
 			break
 		}
 
-		audioCaption := fmt.Sprintf(
+		audioCaption := tg.Esc(fmt.Sprintf(
 			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
 			vtitle, Config.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
-		)
-		audioCaption = tg.Esc(audioCaption)
+		))
 		_, err = tg.SendAudio(tg.SendAudioRequest{
 			ChatId:  Config.TgChatId,
 			Audio:   tgaudio.FileId,
@@ -600,9 +591,9 @@ func beats(td time.Duration) int {
 func ts() string {
 	tnow := time.Now().In(time.FixedZone("IST", 330*60))
 	return fmt.Sprintf(
-		"%d%02d%02d:%02d%02d%s",
+		"%d%02d%02d:%02d%02d+",
 		tnow.Year()%1000, tnow.Month(), tnow.Day(),
-		tnow.Hour(), tnow.Minute(), LogTimeZone,
+		tnow.Hour(), tnow.Minute(),
 	)
 }
 
@@ -612,8 +603,7 @@ func log(msg string, args ...interface{}) {
 
 func tglog(msg string, args ...interface{}) (err error) {
 	log(msg, args...)
-	text := fmt.Sprintf(msg, args...) + NL
-	text = tg.Esc(text)
+	text := tg.Esc(fmt.Sprintf(msg, args...)) + NL
 	_, err = tg.SendMessage(tg.SendMessageRequest{
 		ChatId: Config.TgBossChatId,
 		Text:   text,

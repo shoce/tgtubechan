@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/kkdai/youtube/v2 v2.10.3
-	github.com/shoce/tg v0.250424.216
+	github.com/shoce/tg v0.250424.1142
 	google.golang.org/api v0.230.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -40,4 +40,4 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
-replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 v2.0.0-20250423153824-38396ba8fa71
+replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 v2.0.0-20250424180213-84ddc6d0f4eb
