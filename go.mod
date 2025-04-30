@@ -4,8 +4,8 @@ go 1.24.2
 
 require (
 	github.com/kkdai/youtube/v2 v2.10.3
-	github.com/shoce/tg v0.250424.1142
-	google.golang.org/api v0.230.0
+	github.com/shoce/tg v0.250429.1647
+	google.golang.org/api v0.231.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -35,7 +35,7 @@ require (
 	golang.org/x/oauth2 v0.29.0 // indirect
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250428153025-10db94c68c34 // indirect
 	google.golang.org/grpc v1.72.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )

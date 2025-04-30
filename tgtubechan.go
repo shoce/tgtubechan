@@ -451,27 +451,33 @@ func processYtChannel() {
 			tglog("ERROR os.Remove %s: %v", audioFile, err)
 		}
 
-		tgcover, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
+		var tgcover tg.PhotoSize
+		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
 			ChatId:   Config.TgChatId,
 			FileName: audioName,
 			Photo:    coverBuf,
-		})
-		if err != nil {
+		}); err != nil {
 			tglog("ERROR tg.SendPhotoFile: %v", err)
 			break
-		}
-		var tgcovermax tg.PhotoSize
-		for _, p := range tgcover {
-			if p.Width > tgcovermax.Width {
-				tgcovermax = p
+		} else {
+			for _, p := range tgmsg.Photo {
+				if p.Width > tgcover.Width {
+					tgcover = p
+				}
+			}
+			if tgcover.FileId == "" {
+				tglog("ERROR tg.SendPhotoFile: file_id empty")
+				break
+			}
+			if err := tg.DeleteMessage(tg.DeleteMessageRequest{
+				ChatId:    Config.TgChatId,
+				MessageId: tgmsg.MessageId,
+			}); err != nil {
+				log("ERROR %v", err)
 			}
 		}
-		if tgcovermax.FileId == "" {
-			tglog("ERROR tg.SendPhotoFile: file_id empty")
-			break
-		}
 
-		var tgaudio *tg.Audio
+		var tgaudio tg.Audio
 		if tgmsg, err := tg.SendAudioFile(tg.SendAudioFileRequest{
 			ChatId:    Config.TgChatId,
 			Performer: Config.TgPerformer,
@@ -483,16 +489,22 @@ func processYtChannel() {
 			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
 		} else {
-			tgaudio = &tgmsg.Audio
+			tgaudio = tgmsg.Audio
+			if err := tg.DeleteMessage(tg.DeleteMessageRequest{
+				ChatId:    Config.TgChatId,
+				MessageId: tgmsg.MessageId,
+			}); err != nil {
+				log("ERROR %v", err)
+			}
 		}
 
 		photoCaption := tg.BoldUnderline(vtitle)
-		_, err = tg.SendPhoto(tg.SendPhotoRequest{
+
+		if _, err := tg.SendPhoto(tg.SendPhotoRequest{
 			ChatId:  Config.TgChatId,
-			Photo:   tgcovermax.FileId,
+			Photo:   tgcover.FileId,
 			Caption: photoCaption,
-		})
-		if err != nil {
+		}); err != nil {
 			tglog("ERROR tg.SendPhoto: %v", err)
 			break
 		}
@@ -501,12 +513,12 @@ func processYtChannel() {
 			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
 			vtitle, Config.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
 		))
-		_, err = tg.SendAudio(tg.SendAudioRequest{
+
+		if _, err := tg.SendAudio(tg.SendAudioRequest{
 			ChatId:  Config.TgChatId,
 			Audio:   tgaudio.FileId,
 			Caption: audioCaption,
-		})
-		if err != nil {
+		}); err != nil {
 			tglog("ERROR tg.SendAudio: %v", err)
 			break
 		}
@@ -548,7 +560,7 @@ func processYtChannel() {
 			break
 		}
 
-		if len(videos) > 10 {
+		if len(videos) > 6 {
 			log("sleeping %v", Config.TgVideosInterval)
 			time.Sleep(Config.TgVideosInterval)
 		}
