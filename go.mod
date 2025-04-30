@@ -40,4 +40,4 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
-replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 v2.0.0-20250424180213-84ddc6d0f4eb
+replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 v2.0.0-20250430062409-567490723ea8
