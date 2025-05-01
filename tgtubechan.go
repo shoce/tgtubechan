@@ -509,10 +509,10 @@ func processYtChannel() {
 			break
 		}
 
-		audioCaption := tg.Esc(fmt.Sprintf(
+		audioCaption := tg.Esc(
 			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
 			vtitle, Config.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
-		))
+		)
 
 		if _, err := tg.SendAudio(tg.SendAudioRequest{
 			ChatId:  Config.TgChatId,
@@ -615,10 +615,9 @@ func log(msg string, args ...interface{}) {
 
 func tglog(msg string, args ...interface{}) (err error) {
 	log(msg, args...)
-	text := tg.Esc(fmt.Sprintf(msg, args...)) + NL
 	_, err = tg.SendMessage(tg.SendMessageRequest{
 		ChatId: Config.TgBossChatId,
-		Text:   text,
+		Text:   tg.Esc(msg, args...),
 
 		DisableNotification: true,
 		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
