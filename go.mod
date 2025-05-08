@@ -3,9 +3,9 @@ module github.com/shoce/tgtubechan
 go 1.24.2
 
 require (
-	github.com/kkdai/youtube/v2 v2.10.3
+	github.com/kkdai/youtube/v2 v2.10.4
 	github.com/shoce/tg v0.250501.2239
-	google.golang.org/api v0.231.0
+	google.golang.org/api v0.232.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -40,4 +40,4 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 )
 
-replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 v2.0.0-20250504070453-4efe7e01b32d
+// replace github.com/kkdai/youtube/v2 => github.com/shoce/youtube/v2 master
