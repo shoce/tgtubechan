@@ -10,9 +10,7 @@ https://core.telegram.org/bots/api
 
 go get github.com/kkdai/youtube/v2@master
 
-GoGet
-GoFmt
-GoBuildNull
+GoGet GoFmt GoBuildNull
 
 */
 
@@ -283,15 +281,19 @@ func processYtChannel() {
 
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
-	for j, v := range videos {
-		tglog(
-			"DEBUG "+NL+"%d/%d "+NL+"%s "+NL+"youtu.be/%s "+NL+"%s ",
-			j+1,
-			len(videos),
-			v.Title,
-			v.ResourceId.VideoId,
-			v.PublishedAt,
-		)
+	for _, v := range videos {
+		/*
+			if Config.DEBUG {
+			tglog(
+				"DEBUG "+NL+"%d/%d "+NL+"%s "+NL+"youtu.be/%s "+NL+"%s ",
+				j+1,
+				len(videos),
+				v.Title,
+				v.ResourceId.VideoId,
+				v.PublishedAt,
+			)
+			}
+		*/
 
 		var vpatime time.Time
 		var vtitle string
@@ -367,7 +369,7 @@ func processYtChannel() {
 
 		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
 		if err != nil {
-			tglog("ERROR GetVideoContext: %v", err)
+			tglog("ERROR GetVideoContext: %v"+NL+"%#v", err, v)
 			// 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
 			// 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			break

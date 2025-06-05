@@ -1,8 +1,7 @@
 
 
 # https://hub.docker.com/_/golang/tags
-FROM golang:1.24.2 AS build
-
+FROM golang:1.24.3 AS build
 ENV CGO_ENABLED=0
 
 #ARG TARGETARCH
@@ -20,7 +19,6 @@ ENV CGO_ENABLED=0
 
 RUN mkdir -p /root/tgtubechan/
 WORKDIR /root/tgtubechan/
-
 COPY tgtubechan.go go.mod go.sum /root/tgtubechan/
 RUN go version
 RUN go get -v
