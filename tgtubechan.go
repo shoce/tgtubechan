@@ -275,15 +275,10 @@ func processYtChannel() {
 		os.Exit(1)
 	}
 
-	if len(videos) > 0 {
-		log("DEBUG playlistitems/list: %d items", len(videos))
-	}
-
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
-	for _, v := range videos {
-		/*
-			if Config.DEBUG {
+	if Config.DEBUG {
+		for _, v := range videos {
 			tglog(
 				"DEBUG "+NL+"%d/%d "+NL+"%s "+NL+"youtu.be/%s "+NL+"%s ",
 				j+1,
@@ -292,9 +287,10 @@ func processYtChannel() {
 				v.ResourceId.VideoId,
 				v.PublishedAt,
 			)
-			}
-		*/
+		}
+	}
 
+	for _, v := range videos {
 		var vpatime time.Time
 		var vtitle string
 		var audioName string

@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/kkdai/youtube/v2 v2.10.4
 	github.com/shoce/tg v0.250501.2239
-	google.golang.org/api v0.239.0
+	google.golang.org/api v0.240.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -15,12 +15,12 @@ require (
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
-	github.com/dop251/goja v0.0.0-20250624190929-4d26883d182a // indirect
+	github.com/dop251/goja v0.0.0-20250630131328-58d95d85e994 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
-	github.com/google/pprof v0.0.0-20250629210550-e611ec304b22 // indirect
+	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
