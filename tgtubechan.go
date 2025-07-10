@@ -298,7 +298,22 @@ func processYtChannel() {
 		vpatime, err = time.Parse(time.RFC3339, v.PublishedAt)
 		if err != nil {
 			tglog("ERROR time.Parse PublishedAt: %v", err)
+			// TODO exit => return
 			os.Exit(1)
+		}
+
+		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
+		if err != nil {
+			tglog("ERROR GetVideoContext: %#v"+NL+"%#v", err, v)
+			// TODO 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
+			// TODO 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
+			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
+				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" && time.Now().Sub(vpatime) > time.Hour*6 {
+					tglog("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
+					continue
+				}
+			}
+			break
 		}
 
 		vtitle = v.Title
@@ -317,20 +332,6 @@ func processYtChannel() {
 				vtitle = strings.Replace(vtitle, `"`, `«`, 1)
 				vtitle = strings.Replace(vtitle, `"`, `»`, 1)
 			}
-		}
-
-		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
-		if err != nil {
-			tglog("ERROR GetVideoContext: %#v"+NL+"%#v", err, v)
-			// TODO 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
-			// TODO 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
-			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
-				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" && time.Now().Sub(vpatime) > time.Hour*6 {
-					tglog("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
-					continue
-				}
-			}
-			break
 		}
 
 		audioName = fmt.Sprintf(
