@@ -280,7 +280,7 @@ func processYtChannel() {
 	if Config.DEBUG {
 		for j, v := range videos {
 			tglog(
-				"DEBUG "+NL+tg.Esc("%d/%d ")+NL+"%s "+NL+tg.Esc("youtu.be/%s ")+NL+tg.Esc("%s "),
+				"DEBUG "+NL+"%d/%d "+NL+"%s "+NL+"youtu.be/%s "+NL+"%s ",
 				j+1,
 				len(videos),
 				v.Title,
