@@ -620,6 +620,9 @@ func tglog(msg string, args ...interface{}) (err error) {
 		DisableNotification: true,
 		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
 	})
+	if err != nil && Config.DEBUG {
+		log("DEBUG tglog: %v", err)
+	}
 	return err
 }
 
