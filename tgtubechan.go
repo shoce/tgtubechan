@@ -370,6 +370,13 @@ func processYtChannel() {
 			// TODO 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
 				tglog("ERROR GetVideoContext: err is ytdl.ErrPlayabiltyStatus Status=%s", err.(*ytdl.ErrPlayabiltyStatus).Status)
+				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" {
+					if tpat, err := time.Parse(time.RFC3339, v.PublishedAt); err != nil {
+						tglog("ERROR GetVideoContext Parse PublishedAt: %v", err)
+					} else if tpatdur := time.Now().Sub(tpat); tpatdur > time.Hour*6 {
+						tglog("ERROR GetVideoContext PublishedAt %v ago", tpatdur)
+					}
+				}
 			}
 			break
 		}
