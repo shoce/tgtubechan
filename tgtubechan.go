@@ -368,6 +368,9 @@ func processYtChannel() {
 			tglog("ERROR GetVideoContext: %#v"+NL+"%#v", err, v)
 			// TODO 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
 			// TODO 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
+			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
+				tglog("ERROR GetVideoContext: err is ytdl.ErrPlayabiltyStatus Status=%s", err.(*ytdl.ErrPlayabiltyStatus).Status)
+			}
 			break
 		}
 
