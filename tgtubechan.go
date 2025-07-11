@@ -186,17 +186,19 @@ func main() {
 		os.Exit(1)
 	}(sigterm)
 
+	ytdl.VisitorIdMaxAge = 4 * time.Hour
+	YtdlCl = ytdl.Client{
+		HTTPClient: &http.Client{
+			Transport: &UserAgentTransport{
+				http.DefaultTransport,
+				Config.YtHttpClientUserAgent,
+			},
+		},
+	}
+
 	for {
 		t0 := time.Now()
 
-		YtdlCl = ytdl.Client{
-			HTTPClient: &http.Client{
-				Transport: &UserAgentTransport{
-					http.DefaultTransport,
-					Config.YtHttpClientUserAgent,
-				},
-			},
-		}
 		processYtChannel()
 
 		if dur := time.Now().Sub(t0); dur < Config.Interval {
