@@ -186,7 +186,7 @@ func main() {
 		os.Exit(1)
 	}(sigterm)
 
-	ytdl.VisitorIdMaxAge = 4 * time.Hour
+	ytdl.VisitorIdMaxAge = 1 * time.Hour
 	YtdlCl = ytdl.Client{
 		HTTPClient: &http.Client{
 			Transport: &UserAgentTransport{
