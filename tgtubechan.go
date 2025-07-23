@@ -343,28 +343,28 @@ func processYtChannel() {
 			v.ResourceId.VideoId,
 		)
 
-		var coverUrl string
-		var coverBuf, audioBuf *bytes.Buffer
+		var thumbUrl string
+		var thumbBuf, audioBuf *bytes.Buffer
 
 		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
-			coverUrl = v.Thumbnails.Maxres.Url
+			thumbUrl = v.Thumbnails.Maxres.Url
 		} else if v.Thumbnails.Standard != nil && v.Thumbnails.Standard.Url != "" {
-			coverUrl = v.Thumbnails.Standard.Url
+			thumbUrl = v.Thumbnails.Standard.Url
 		} else if v.Thumbnails.High != nil && v.Thumbnails.High.Url != "" {
-			coverUrl = v.Thumbnails.High.Url
+			thumbUrl = v.Thumbnails.High.Url
 		} else if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
-			coverUrl = v.Thumbnails.Medium.Url
+			thumbUrl = v.Thumbnails.Medium.Url
 		} else {
-			tglog("ERROR no cover url")
+			tglog("ERROR no thumb url")
 			break
 		}
 
-		coverBuf, err = downloadFile(coverUrl)
+		thumbBuf, err = downloadFile(thumbUrl)
 		if err != nil {
 			tglog("ERROR download cover: %v", err)
 			break
 		}
-		log("DEBUG cover: %dkb", coverBuf.Len()/1000)
+		log("DEBUG cover: %dkb", thumbBuf.Len()/1000)
 
 		var audioFormat ytdl.Format
 		for _, f := range vinfo.Formats {
@@ -448,7 +448,7 @@ func processYtChannel() {
 		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
 			ChatId:   Config.TgChatId,
 			FileName: audioName,
-			Photo:    coverBuf,
+			Photo:    thumbBuf,
 		}); err != nil {
 			tglog("ERROR tg.SendPhotoFile: %v", err)
 			break
@@ -477,7 +477,7 @@ func processYtChannel() {
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
 			Audio:     audioBuf,
-			Thumb:     coverBuf,
+			Thumb:     thumbBuf,
 		}); err != nil {
 			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
