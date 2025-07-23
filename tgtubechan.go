@@ -343,8 +343,8 @@ func processYtChannel() {
 			v.ResourceId.VideoId,
 		)
 
-		var coverUrl, thumbUrl string
-		var coverBuf, thumbBuf, audioBuf *bytes.Buffer
+		var coverUrl string
+		var coverBuf, audioBuf *bytes.Buffer
 
 		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
 			coverUrl = v.Thumbnails.Maxres.Url
@@ -359,26 +359,12 @@ func processYtChannel() {
 			break
 		}
 
-		if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
-			thumbUrl = v.Thumbnails.Medium.Url
-		} else {
-			tglog("ERROR no thumb url")
-			break
-		}
-
 		coverBuf, err = downloadFile(coverUrl)
 		if err != nil {
 			tglog("ERROR download cover: %v", err)
 			break
 		}
 		log("DEBUG cover: %dkb", coverBuf.Len()/1000)
-
-		thumbBuf, err = downloadFile(thumbUrl)
-		if err != nil {
-			tglog("ERROR download thumb: %v", err)
-			break
-		}
-		log("DEBUG thumb: %dkb", thumbBuf.Len()/1000)
 
 		var audioFormat ytdl.Format
 		for _, f := range vinfo.Formats {
@@ -491,7 +477,7 @@ func processYtChannel() {
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
 			Audio:     audioBuf,
-			Thumb:     thumbBuf,
+			Thumb:     coverBuf,
 		}); err != nil {
 			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
