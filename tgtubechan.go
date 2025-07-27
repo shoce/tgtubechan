@@ -32,6 +32,10 @@ import (
 	"syscall"
 	"time"
 
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
+
 	ytdl "github.com/kkdai/youtube/v2"
 	youtubeoption "google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
@@ -344,8 +348,6 @@ func processYtChannel() {
 		)
 
 		var thumbUrl string
-		var thumbBuf, audioBuf *bytes.Buffer
-
 		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
 			thumbUrl = v.Thumbnails.Maxres.Url
 		} else if v.Thumbnails.Standard != nil && v.Thumbnails.Standard.Url != "" {
@@ -359,12 +361,20 @@ func processYtChannel() {
 			break
 		}
 
+		var thumbBuf *bytes.Buffer
 		thumbBuf, err = downloadFile(thumbUrl)
 		if err != nil {
-			tglog("ERROR download cover: %v", err)
+			tglog("ERROR download thumb %s: %v", thumbUrl, err)
 			break
 		}
-		log("DEBUG cover: %dkb", thumbBuf.Len()/1000)
+		log("DEBUG thumb: %s %dkb", thumbUrl, thumbBuf.Len()/1000)
+
+		if thumbImg, thumbImgFmt, err := image.Decode(thumbBuf); err != nil {
+			tglog("WARN thumb %s decode: %v", thumbUrl, err)
+		} else {
+			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
+			tglog("DEBUG thumb %s fmt:%s size:%dx%d square:%v", thumbUrl, thumbImgFmt, dx, dy, dx == dy)
+		}
 
 		var audioFormat ytdl.Format
 		for _, f := range vinfo.Formats {
@@ -383,6 +393,7 @@ func processYtChannel() {
 		}
 		defer ytstream.Close()
 
+		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
 		_, err = io.Copy(audioBuf, ytstream)
 		if err != nil {
