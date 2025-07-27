@@ -656,7 +656,7 @@ func (config *TgTubeChanConfig) Get() error {
 	}
 
 	if config.DEBUG {
-		log("DEBUG Config.Get: %+v", config)
+		//log("DEBUG Config.Get: %+v", config)
 	}
 
 	return nil
@@ -664,7 +664,7 @@ func (config *TgTubeChanConfig) Get() error {
 
 func (config *TgTubeChanConfig) Put() error {
 	if config.DEBUG {
-		log("DEBUG Config.Put %s %+v", config.YssUrl, config)
+		//log("DEBUG Config.Put %s %+v", config.YssUrl, config)
 	}
 
 	rbb, err := yaml.Marshal(config)
