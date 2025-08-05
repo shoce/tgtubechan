@@ -115,16 +115,16 @@ func init() {
 	}
 
 	if Config.DEBUG {
-		log("DEBUG==true")
+		log("DEBUG <true>")
 	}
 
-	log("Interval==%v", Config.Interval)
+	log("Interval <%v>", Config.Interval)
 	if Config.Interval == 0 {
 		log("ERROR Interval empty")
 		os.Exit(1)
 	}
 
-	log("TgApiUrlBase==`%s`", Config.TgApiUrlBase)
+	log("TgApiUrlBase [%s]", Config.TgApiUrlBase)
 	if Config.TgApiUrlBase == "" {
 		log("ERROR TgApiUrlBase empty")
 		os.Exit(1)
@@ -162,7 +162,7 @@ func init() {
 	if Config.TgTitleCleanRe != "" {
 		TgTitleCleanRe, err = regexp.Compile(Config.TgTitleCleanRe)
 		if err != nil {
-			log("ERROR TgTitleCleanRe `%s`; %s", Config.TgTitleCleanRe, err)
+			log("ERROR TgTitleCleanRe [%s]; %v", Config.TgTitleCleanRe, err)
 			os.Exit(1)
 		}
 	}
@@ -177,8 +177,8 @@ func init() {
 		os.Exit(1)
 	}
 
-	log("FfmpegPath==`%s`", Config.FfmpegPath)
-	log("FfmpegGlobalOptions==%+v", Config.FfmpegGlobalOptions)
+	log("FfmpegPath [%s]", Config.FfmpegPath)
+	log("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
 }
 
 func main() {
@@ -218,7 +218,7 @@ func processYtChannel() {
 
 	YtSvc, err = youtube.NewService(Ctx, youtubeoption.WithAPIKey(Config.YtKey))
 	if err != nil {
-		tglog("ERROR youtube NewService: %s", err)
+		tglog("ERROR youtube NewService: %v", err)
 		os.Exit(1)
 	}
 
@@ -248,7 +248,7 @@ func processYtChannel() {
 		}
 		for _, c := range channelslist.Items {
 			tglog(
-				"channel id: %s"+NL+"channel title: %s"+NL+"uploads playlist id: %+v"+NL,
+				"channel id [%s]"+NL+"title [%s]"+NL+"uploads playlist id <%v>"+NL,
 				c.Id, c.Snippet.Title, c.ContentDetails.RelatedPlaylists.Uploads,
 			)
 		}
@@ -286,7 +286,7 @@ func processYtChannel() {
 	if Config.DEBUG {
 		for j, v := range videos {
 			tglog(
-				"DEBUG "+NL+"%d/%d "+NL+"%s "+NL+"youtu.be/%s "+NL+"%s ",
+				"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
 				j+1,
 				len(videos),
 				v.Title,
@@ -364,16 +364,16 @@ func processYtChannel() {
 		var thumbBytes []byte
 		thumbBytes, err = downloadFile(thumbUrl)
 		if err != nil {
-			tglog("ERROR download thumb %s: %v", thumbUrl, err)
+			tglog("ERROR download thumb url [%s]: %v", thumbUrl, err)
 			break
 		}
 		log("DEBUG thumb url [%s] size <%dkb>", thumbUrl, len(thumbBytes)>>10)
 
 		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
-			tglog("WARN thumb %s decode: %v", thumbUrl, err)
+			tglog("ERROR thumb url [%s] decode: %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			tglog("DEBUG thumb %s fmt:%s size:%dx%d square:%v", thumbUrl, thumbImgFmt, dx, dy, dx == dy)
+			tglog("DEBUG thumb url [%s] fmt [%s] res [%dx%d]", thumbUrl, thumbImgFmt, dx, dy)
 		}
 
 		var audioFormat ytdl.Format
@@ -407,21 +407,21 @@ func processYtChannel() {
 			uint64(vinfo.Duration.Seconds()),
 		)
 		if audioBuf.Len()>>20 < 1 {
-			log("WARNING Downloaded audio is less than one megabyte, aborting.")
+			log("WARNING downloaded audio is less than one megabyte, aborting")
 			break
 		}
 
 		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
 		err = ioutil.WriteFile(audioSrcFile, audioBuf.Bytes(), 0400)
 		if err != nil {
-			tglog("ERROR WriteFile %s: %v", audioSrcFile, err)
+			tglog("ERROR WriteFile [%s]: %v", audioSrcFile, err)
 			break
 		}
 
 		audioFile := audioSrcFile
 
 		if Config.FfmpegPath != "" && Config.TgAudioBitrateKbps > 0 {
-			log("DEBUG target audio bitrate:%dkbps", Config.TgAudioBitrateKbps)
+			log("DEBUG target audio bitrate <%dkbps>", Config.TgAudioBitrateKbps)
 			audioFile = fmt.Sprintf("%s..%dk..m4a", audioName, Config.TgAudioBitrateKbps)
 			ffmpegArgs := append(Config.FfmpegGlobalOptions,
 				"-i", audioSrcFile,
@@ -430,25 +430,25 @@ func processYtChannel() {
 			)
 			err = exec.Command(Config.FfmpegPath, ffmpegArgs...).Run()
 			if err != nil {
-				tglog("ERROR ffmpeg: %v", err)
+				tglog("ERROR ffmpeg (%s %v): %v", Config.FfmpegPath, ffmpegArgs, err)
 				break
 			}
 
 			err = os.Remove(audioSrcFile)
 			if err != nil {
-				tglog("ERROR Remove %s: %v", audioSrcFile, err)
+				tglog("ERROR Remove [%s]: %v", audioSrcFile, err)
 			}
 		}
 
 		audioBytes, err := ioutil.ReadFile(audioFile)
 		if err != nil {
-			tglog("ERROR ReadFile %s: %v", audioFile, err)
+			tglog("ERROR ReadFile [%s]: %v", audioFile, err)
 			break
 		} else if err := os.Remove(audioFile); err != nil {
-			tglog("ERROR os.Remove %s: %v", audioFile, err)
+			tglog("ERROR os.Remove [%s]: %v", audioFile, err)
 		}
 
-		log("audio size <%dmb>", len(audioBytes)>>20)
+		log("DEBUG audio size <%dmb>", len(audioBytes)>>20)
 
 		var tgcover tg.PhotoSize
 		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
@@ -472,7 +472,7 @@ func processYtChannel() {
 				ChatId:    Config.TgChatId,
 				MessageId: tgmsg.MessageId,
 			}); err != nil {
-				log("ERROR %v", err)
+				log("ERROR tg.DeleteMessage: %v", err)
 			}
 		}
 
@@ -493,7 +493,7 @@ func processYtChannel() {
 				ChatId:    Config.TgChatId,
 				MessageId: tgmsg.MessageId,
 			}); err != nil {
-				log("ERROR %v", err)
+				log("ERROR tg.DeleteMessage: %v", err)
 			}
 		}
 
@@ -555,12 +555,12 @@ func processYtChannel() {
 
 		Config.YtLastPublishedAt = vpatime.Format(time.RFC3339)
 		if err := Config.Put(); err != nil {
-			log("ERROR Config.Put: %s", err)
+			log("ERROR Config.Put: %v", err)
 			break
 		}
 
 		if len(videos) > 6 {
-			log("sleeping %v", Config.TgVideosInterval)
+			log("sleeping <%v>", Config.TgVideosInterval)
 			time.Sleep(Config.TgVideosInterval)
 		}
 	}
@@ -613,15 +613,14 @@ func log(msg string, args ...interface{}) {
 
 func tglog(msg string, args ...interface{}) (err error) {
 	log(msg, args...)
-	_, err = tg.SendMessage(tg.SendMessageRequest{
+	if _, err = tg.SendMessage(tg.SendMessageRequest{
 		ChatId: Config.TgBossChatId,
 		Text:   tg.Esc(msg, args...),
 
 		DisableNotification: true,
 		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
-	})
-	if err != nil && Config.DEBUG {
-		log("DEBUG tglog: %v", err)
+	}); err != nil {
+		log("ERROR tglog: %v", err)
 	}
 	return err
 }
