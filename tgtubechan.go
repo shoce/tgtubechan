@@ -367,7 +367,7 @@ func processYtChannel() {
 			tglog("ERROR download thumb %s: %v", thumbUrl, err)
 			break
 		}
-		log("DEBUG thumb: %s %dkb", thumbUrl, len(thumbBytes)/1000)
+		log("DEBUG thumb url [%s] size <%dkb>", thumbUrl, len(thumbBytes)>>10)
 
 		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
 			tglog("WARN thumb %s decode: %v", thumbUrl, err)
@@ -401,12 +401,12 @@ func processYtChannel() {
 		}
 
 		log(
-			"Downloaded audio size:%dmb bitrate:%dkbps duration:%ds",
-			audioBuf.Len()/1000/1000,
-			audioFormat.Bitrate/1024,
-			int64(vinfo.Duration.Seconds()),
+			"downloaded audio size <%dmb> bitrate <%dkbps> duration <%ds>",
+			audioBuf.Len()>>20,
+			audioFormat.Bitrate>>10,
+			uint64(vinfo.Duration.Seconds()),
 		)
-		if audioBuf.Len()/1000/1000 < 1 {
+		if audioBuf.Len()>>20 < 1 {
 			log("WARNING Downloaded audio is less than one megabyte, aborting.")
 			break
 		}
@@ -448,7 +448,7 @@ func processYtChannel() {
 			tglog("ERROR os.Remove %s: %v", audioFile, err)
 		}
 
-		log("audio size:%dmb", len(audioBytes)/1000/1000)
+		log("audio size <%dmb>", len(audioBytes)>>20)
 
 		var tgcover tg.PhotoSize
 		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
