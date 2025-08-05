@@ -361,15 +361,15 @@ func processYtChannel() {
 			break
 		}
 
-		var thumbBuf *bytes.Buffer
-		thumbBuf, err = downloadFile(thumbUrl)
+		var thumbBytes []byte
+		thumbBytes, err = downloadFile(thumbUrl)
 		if err != nil {
 			tglog("ERROR download thumb %s: %v", thumbUrl, err)
 			break
 		}
-		log("DEBUG thumb: %s %dkb", thumbUrl, thumbBuf.Len()/1000)
+		log("DEBUG thumb: %s %dkb", thumbUrl, len(thumbBytes)/1000)
 
-		if thumbImg, thumbImgFmt, err := image.Decode(thumbBuf); err != nil {
+		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
 			tglog("WARN thumb %s decode: %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
@@ -395,8 +395,7 @@ func processYtChannel() {
 
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
-		_, err = io.Copy(audioBuf, ytstream)
-		if err != nil {
+		if _, err = io.Copy(audioBuf, ytstream); err != nil {
 			tglog("ERROR copy stream: %v", err)
 			break
 		}
@@ -441,25 +440,21 @@ func processYtChannel() {
 			}
 		}
 
-		abb, err := ioutil.ReadFile(audioFile)
+		audioBytes, err := ioutil.ReadFile(audioFile)
 		if err != nil {
 			tglog("ERROR ReadFile %s: %v", audioFile, err)
 			break
-		}
-		audioBuf = bytes.NewBuffer(abb)
-
-		log("audio size:%dmb", audioBuf.Len()/1000/1000)
-
-		err = os.Remove(audioFile)
-		if err != nil {
+		} else if err := os.Remove(audioFile); err != nil {
 			tglog("ERROR os.Remove %s: %v", audioFile, err)
 		}
+
+		log("audio size:%dmb", len(audioBytes)/1000/1000)
 
 		var tgcover tg.PhotoSize
 		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
 			ChatId:   Config.TgChatId,
 			FileName: audioName,
-			Photo:    thumbBuf,
+			Photo:    bytes.NewReader(thumbBytes),
 		}); err != nil {
 			tglog("ERROR tg.SendPhotoFile: %v", err)
 			break
@@ -487,8 +482,8 @@ func processYtChannel() {
 			Performer: Config.TgPerformer,
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
-			Audio:     audioBuf,
-			Thumb:     thumbBuf,
+			Audio:     bytes.NewReader(audioBytes),
+			Thumb:     bytes.NewReader(thumbBytes),
 		}); err != nil {
 			tglog("ERROR tg.SendAudioFile: %v", err)
 			break
@@ -573,21 +568,20 @@ func processYtChannel() {
 	return
 }
 
-func downloadFile(url string) (*bytes.Buffer, error) {
+func downloadFile(url string) ([]byte, error) {
 	resp, err := HttpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var bb = bytes.NewBuffer(nil)
+	bb := bytes.NewBuffer(nil)
 
-	_, err = io.Copy(bb, resp.Body)
-	if err != nil {
+	if _, err := io.Copy(bb, resp.Body); err != nil {
 		return nil, err
 	}
 
-	return bb, nil
+	return bb.Bytes(), nil
 }
 
 type UserAgentTransport struct {
