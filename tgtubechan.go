@@ -382,7 +382,7 @@ func processYtChannel() {
 				continue
 			}
 			log("DEBUG format size <%dmb> AudioTrack %+v", f.ContentLength>>20, f.AudioTrack)
-			if f.AudioTrack != nil && !f.AudioTrack.AudioIsDefault {
+			if f.AudioTrack != nil && !strings.HasSuffix(f.AudioTrack.DisplayName, " original") {
 				log("DEBUG skip")
 				continue
 			}
@@ -407,10 +407,10 @@ func processYtChannel() {
 		}
 
 		log(
-			"downloaded audio size <%dmb> bitrate <%dkbps> duration <%ds>",
+			"downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
 			audioBuf.Len()>>20,
 			audioFormat.Bitrate>>10,
-			uint64(vinfo.Duration.Seconds()),
+			uint64(vinfo.Duration),
 		)
 		if audioBuf.Len()>>20 < 1 {
 			log("WARNING downloaded audio is less than one megabyte, aborting")
