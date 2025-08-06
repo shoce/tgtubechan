@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/kkdai/youtube/v2 v2.10.4
 	github.com/shoce/tg v0.250805.528
-	google.golang.org/api v0.244.0
+	google.golang.org/api v0.245.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

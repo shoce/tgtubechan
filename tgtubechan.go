@@ -377,8 +377,13 @@ func processYtChannel() {
 		}
 
 		var audioFormat ytdl.Format
-		for _, f := range vinfo.Formats {
+		for _, f := range vinfo.Formats.WithAudioChannels() {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
+				continue
+			}
+			flang := strings.ToLower(f.LanguageDisplayName())
+			log("format size <%dmb> language [%s]", f.ContentLength>>20, flang)
+			if f.AudioTrack != nil && f.AudioTrack.AudioIsDefault == false {
 				continue
 			}
 			if audioFormat.Bitrate == 0 || f.Bitrate > audioFormat.Bitrate {
