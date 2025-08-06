@@ -384,9 +384,11 @@ func processYtChannel() {
 			flang := strings.ToLower(f.LanguageDisplayName())
 			log("format size <%dmb> language [%s]", f.ContentLength>>20, flang)
 			if f.AudioTrack != nil && f.AudioTrack.AudioIsDefault == false {
+				log("skip")
 				continue
 			}
 			if audioFormat.Bitrate == 0 || f.Bitrate > audioFormat.Bitrate {
+				log("pick")
 				audioFormat = f
 			}
 		}
