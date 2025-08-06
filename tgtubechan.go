@@ -370,10 +370,10 @@ func processYtChannel() {
 		log("DEBUG thumb url [%s] size <%dkb>", thumbUrl, len(thumbBytes)>>10)
 
 		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
-			tglog("ERROR thumb url [%s] decode: %v", thumbUrl, err)
+			log("ERROR thumb url [%s] decode: %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			tglog("DEBUG thumb url [%s] fmt [%s] res [%dx%d]", thumbUrl, thumbImgFmt, dx, dy)
+			log("DEBUG thumb url [%s] fmt [%s] res [%dx%d]", thumbUrl, thumbImgFmt, dx, dy)
 		}
 
 		var audioFormat ytdl.Format
@@ -383,7 +383,6 @@ func processYtChannel() {
 			}
 			log("DEBUG format size <%dmb> AudioTrack %+v", f.ContentLength>>20, f.AudioTrack)
 			if f.AudioTrack != nil && !strings.HasSuffix(f.AudioTrack.DisplayName, " original") {
-				log("DEBUG skip")
 				continue
 			}
 			if audioFormat.Bitrate == 0 || f.Bitrate > audioFormat.Bitrate {
@@ -410,7 +409,7 @@ func processYtChannel() {
 			"downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
 			audioBuf.Len()>>20,
 			audioFormat.Bitrate>>10,
-			uint64(vinfo.Duration),
+			vinfo.Duration,
 		)
 		if audioBuf.Len()>>20 < 1 {
 			log("WARNING downloaded audio is less than one megabyte, aborting")
