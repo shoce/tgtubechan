@@ -381,7 +381,7 @@ func processYtChannel() {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
 				continue
 			}
-			log("DEBUG format size <%dmb> language [%s] AudioTrack %+v", f.ContentLength>>20, strings.ToLower(f.LanguageDisplayName()), f.AudioTrack)
+			log("DEBUG format size <%dmb> AudioTrack %+v", f.ContentLength>>20, f.AudioTrack)
 			if f.AudioTrack != nil && !f.AudioTrack.AudioIsDefault {
 				log("DEBUG skip")
 				continue
