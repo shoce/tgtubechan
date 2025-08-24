@@ -294,22 +294,18 @@ func processYtChannel(channel TgTubeChanChannel) (err error) {
 
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
-	if Config.DEBUG {
-		/*
-			for j, v := range videos {
-				tglog(
-					"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
-					j+1,
-					len(videos),
-					v.Title,
-					v.ResourceId.VideoId,
-					v.PublishedAt,
-				)
-			}
-		*/
-	}
+	for j, v := range videos {
+		if Config.DEBUG {
+			tglog(
+				"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
+				j+1,
+				len(videos),
+				v.Title,
+				v.ResourceId.VideoId,
+				v.PublishedAt,
+			)
+		}
 
-	for _, v := range videos {
 		var vpatime time.Time
 		var vtitle string
 		var audioName string
