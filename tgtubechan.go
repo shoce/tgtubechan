@@ -295,16 +295,18 @@ func processYtChannel(channel TgTubeChanChannel) (err error) {
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
 	if Config.DEBUG {
-		for j, v := range videos {
-			tglog(
-				"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
-				j+1,
-				len(videos),
-				v.Title,
-				v.ResourceId.VideoId,
-				v.PublishedAt,
-			)
-		}
+		/*
+			for j, v := range videos {
+				tglog(
+					"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
+					j+1,
+					len(videos),
+					v.Title,
+					v.ResourceId.VideoId,
+					v.PublishedAt,
+				)
+			}
+		*/
 	}
 
 	for _, v := range videos {
@@ -510,7 +512,7 @@ func processYtChannel(channel TgTubeChanChannel) (err error) {
 		)
 
 		if _, err := tg.SendAudio(tg.SendAudioRequest{
-			ChatId:  Config.TgChatId,
+			ChatId:  channel.TgChatId,
 			Audio:   tgaudio.FileId,
 			Caption: audioCaption,
 		}); err != nil {
@@ -613,7 +615,7 @@ func tglog(msg string, args ...interface{}) (err error) {
 		DisableNotification: true,
 		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
 	}); err != nil {
-		log("ERROR tglog: %v", err)
+		log("ERROR tglog %v", err)
 	}
 	return err
 }
