@@ -1,10 +1,9 @@
 ---
-
 apiVersion: v1
 kind: ConfigMap
 
 metadata:
-  name: {{ $.Release.Name }}-tgtubechan
+  name: {{ $.Values.AppName }}
   namespace: {{ $.Release.Namespace }}
 
 data:

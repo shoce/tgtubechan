@@ -1,23 +1,24 @@
 ---
-
 apiVersion: apps/v1
 kind: StatefulSet
 
 metadata:
-  name: {{ $.Release.Name }}-tgtubechan
+  name: {{ $.Values.AppName }}
   namespace: {{ $.Release.Namespace }}
   labels:
-    app: {{ $.Release.Name }}-tgtubechan
+    app: {{ $.Values.AppName }}
 
 spec:
+
   selector:
     matchLabels:
-      app: {{ $.Release.Name }}-tgtubechan
+      app: {{ $.Values.AppName }}
+
   template:
     metadata:
-      name: {{ $.Release.Name }}-tgtubechan
+      name: {{ $.Values.AppName }}
       labels:
-        app: {{ $.Release.Name }}-tgtubechan
+        app: {{ $.Values.AppName }}
       annotations:
         checksum/configmap: {{ include ( print $.Template.BasePath "/" "configmap.yaml" ) . | sha256sum }}
 
@@ -25,11 +26,11 @@ spec:
 
       containers:
 
-        - name: {{ $.Release.Name }}-tgtubechan
+        - name: {{ $.Values.AppName }}
           image: "{{ $.Values.ImageNameGithubTgTubeChan }}:{{ $.Values.ImageTagGithubTgTubeChan }}"
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
-                name: {{ $.Release.Name }}-tgtubechan
+                name: {{ $.Values.AppName }}
 
 
