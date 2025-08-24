@@ -494,7 +494,7 @@ func processYtChannel(channel TgTubeChanChannel) (err error) {
 			}
 		}
 
-		photoCaption := tg.BoldUnderline(vtitle)
+		photoCaption := tg.BoldUnderline(tg.Esc(vtitle))
 
 		if _, err := tg.SendPhoto(tg.SendPhotoRequest{
 			ChatId:  channel.TgChatId,
