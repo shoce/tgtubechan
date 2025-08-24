@@ -221,7 +221,7 @@ func main() {
 
 		for _, channel := range Config.Channels {
 			if err := processYtChannel(channel); err != nil {
-				tglog("ERROR processYtChannel %v", err)
+				tglog("ERROR processYtChannel %s %v", channel.Name, err)
 			}
 		}
 
