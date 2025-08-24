@@ -219,9 +219,9 @@ func main() {
 	for {
 		t0 := time.Now()
 
-		for _, channel := range Config.Channels {
-			if err := processYtChannel(channel); err != nil {
-				tglog("ERROR processYtChannel %s %v", channel.Name, err)
+		for jchannel, _ := range Config.Channels {
+			if err := processYtChannel(&Config.Channels[jchannel]); err != nil {
+				tglog("ERROR processYtChannel %s %v", Config.Channels[jchannel].Name, err)
 			}
 		}
 
@@ -233,7 +233,7 @@ func main() {
 	return
 }
 
-func processYtChannel(channel TgTubeChanChannel) (err error) {
+func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	YtSvc, err = youtube.NewService(Ctx, youtubeoption.WithAPIKey(Config.YtKey))
 	if err != nil {
 		return fmt.Errorf("youtube NewService %v", err)
