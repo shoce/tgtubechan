@@ -58,10 +58,12 @@ type TgTubeChanChannel struct {
 	YtPlaylistId      string `yaml:"YtPlaylistId"`
 	YtLastPublishedAt string `yaml:"YtLastPublishedAt"`
 
-	TgChatId       string `yaml:"TgChatId"`
-	TgPerformer    string `yaml:"TgPerformer"`
-	TgTitleCleanRe string `yaml:"TgTitleCleanRe"`
-	TgTitleUnquote bool   `yaml:"TgTitleUnquote"`
+	TgChatId          string `yaml:"TgChatId"`
+	TgPerformer       string `yaml:"TgPerformer"`
+	TgTitleCleanRe    string `yaml:"TgTitleCleanRe"`
+	TgTitleUnquote    bool   `yaml:"TgTitleUnquote"`
+	TgSkipPhoto       bool   `yaml:"TgSkipPhoto"`
+	TgSkipDescription bool   `yaml:"TgSkipDescription"`
 }
 
 type TgTubeChanConfig struct {
@@ -449,28 +451,42 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		log("DEBUG audio size <%dmb>", len(audioBytes)>>20)
 
-		var tgcover tg.PhotoSize
-		if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
-			ChatId:   channel.TgChatId,
-			FileName: audioName,
-			Photo:    bytes.NewReader(thumbBytes),
-		}); err != nil {
-			return fmt.Errorf("ERROR tg.SendPhotoFile %v", err)
-		} else {
-			for _, p := range tgmsg.Photo {
-				if p.Width > tgcover.Width {
-					tgcover = p
+		if !channel.TgSkipPhoto {
+
+			var tgcover tg.PhotoSize
+			if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
+				ChatId:   channel.TgChatId,
+				FileName: audioName,
+				Photo:    bytes.NewReader(thumbBytes),
+			}); err != nil {
+				return fmt.Errorf("ERROR tg.SendPhotoFile %v", err)
+			} else {
+				for _, p := range tgmsg.Photo {
+					if p.Width > tgcover.Width {
+						tgcover = p
+					}
+				}
+				if tgcover.FileId == "" {
+					return fmt.Errorf("ERROR tg.SendPhotoFile file_id empty")
+				}
+				if err := tg.DeleteMessage(tg.DeleteMessageRequest{
+					ChatId:    channel.TgChatId,
+					MessageId: tgmsg.MessageId,
+				}); err != nil {
+					log("ERROR tg.DeleteMessage: %v", err)
 				}
 			}
-			if tgcover.FileId == "" {
-				return fmt.Errorf("ERROR tg.SendPhotoFile file_id empty")
-			}
-			if err := tg.DeleteMessage(tg.DeleteMessageRequest{
-				ChatId:    channel.TgChatId,
-				MessageId: tgmsg.MessageId,
+
+			photoCaption := tg.BoldUnderline(tg.Esc(vtitle))
+
+			if _, err := tg.SendPhoto(tg.SendPhotoRequest{
+				ChatId:  channel.TgChatId,
+				Photo:   tgcover.FileId,
+				Caption: photoCaption,
 			}); err != nil {
-				log("ERROR tg.DeleteMessage: %v", err)
+				return fmt.Errorf("tg.SendPhoto %v", err)
 			}
+
 		}
 
 		var tgaudio tg.Audio
@@ -493,16 +509,6 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 		}
 
-		photoCaption := tg.BoldUnderline(tg.Esc(vtitle))
-
-		if _, err := tg.SendPhoto(tg.SendPhotoRequest{
-			ChatId:  channel.TgChatId,
-			Photo:   tgcover.FileId,
-			Caption: photoCaption,
-		}); err != nil {
-			return fmt.Errorf("tg.SendPhoto %v", err)
-		}
-
 		audioCaption := tg.Esc(
 			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
 			vtitle, channel.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
@@ -516,34 +522,38 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("tg.SendAudio %v", err)
 		}
 
-		var spp []string
-		if len(v.Description) < 4000 {
-			spp = []string{v.Description}
-		} else {
-			var sp string
-			srs := strings.Split(v.Description, NL+NL)
-			for i, s := range srs {
-				sp += s + NL + NL
-				if i == len(srs)-1 || len(sp)+len(srs[i+1]) > 4000 {
-					spp = append(spp, sp)
-					sp = ""
+		if !channel.TgSkipDescription {
+
+			var spp []string
+			if len(v.Description) < 4000 {
+				spp = []string{v.Description}
+			} else {
+				var sp string
+				srs := strings.Split(v.Description, NL+NL)
+				for i, s := range srs {
+					sp += s + NL + NL
+					if i == len(srs)-1 || len(sp)+len(srs[i+1]) > 4000 {
+						spp = append(spp, sp)
+						sp = ""
+					}
 				}
 			}
-		}
 
-		for _, sp := range spp {
-			if strings.TrimSpace(sp) == "" {
-				continue
-			}
-			_, err = tg.SendMessage(tg.SendMessageRequest{
-				ChatId: channel.TgChatId,
-				Text:   tg.Esc(sp),
+			for _, sp := range spp {
+				if strings.TrimSpace(sp) == "" {
+					continue
+				}
+				_, err = tg.SendMessage(tg.SendMessageRequest{
+					ChatId: channel.TgChatId,
+					Text:   tg.Esc(sp),
 
-				LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
-			})
-			if err != nil {
-				return fmt.Errorf("tg.SendMessage %v", err)
+					LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
+				})
+				if err != nil {
+					return fmt.Errorf("tg.SendMessage %v", err)
+				}
 			}
+
 		}
 
 		channel.YtLastPublishedAt = vpatime.Format(time.RFC3339)
