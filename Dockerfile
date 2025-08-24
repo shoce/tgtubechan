@@ -31,6 +31,8 @@ RUN ls -l -a
 
 # https://hub.docker.com/_/alpine/tags
 FROM alpine:3.22
+ARG APPNAME
+ENV APPNAME=$APPNAME
 RUN apk add --no-cache tzdata
 RUN apk add --no-cache gcompat && ln -s -f -v ld-linux-x86-64.so.2 /lib/libresolv.so.2
 
