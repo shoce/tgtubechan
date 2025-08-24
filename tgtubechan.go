@@ -272,7 +272,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if len(channelslist.Items) > 1 {
 			return fmt.Errorf("channels/list more than one result")
 		}
+
 		channel.YtPlaylistId = channelslist.Items[0].ContentDetails.RelatedPlaylists.Uploads
+		if err := Config.Put(); err != nil {
+			return fmt.Errorf("Config.Put %v", err)
+		}
 	}
 
 	// https://developers.google.com/youtube/v3/docs/playlistItems/list
@@ -287,6 +291,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			for _, i := range r.Items {
 				if channel.YtLastPublishedAt == "" || i.Snippet.PublishedAt > channel.YtLastPublishedAt {
 					videos = append(videos, *i.Snippet)
+					if len(videos)%1000 == 0 {
+						log("got 1k more videos from the playlist")
+					}
 				}
 			}
 			return nil
