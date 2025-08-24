@@ -220,8 +220,9 @@ func main() {
 		t0 := time.Now()
 
 		for jchannel, _ := range Config.Channels {
-			if err := processYtChannel(&Config.Channels[jchannel]); err != nil {
-				tglog("ERROR processYtChannel %s %v", Config.Channels[jchannel].Name, err)
+			channel := &Config.Channels[jchannel]
+			if err := processYtChannel(channel); err != nil {
+				tglog("ERROR processYtChannel %s %v", channel.Name, err)
 			}
 		}
 
