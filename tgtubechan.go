@@ -428,8 +428,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		)
 
 		// TODO check size vs duration
-		if audioBuf.Len()>>10 < 400 {
-			return fmt.Errorf("downloaded audio is less than 400kb, aborting")
+		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
+			return fmt.Errorf("downloaded audio is less than half of expected size, aborting")
 		}
 
 		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
