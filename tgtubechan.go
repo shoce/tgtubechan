@@ -287,14 +287,14 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	playlistitemslistcall = playlistitemslistcall.PlaylistId(channel.YtPlaylistId)
 	if err = playlistitemslistcall.Pages(
 		Ctx,
-		func(r *youtube.PlaylistItemListResponse) error {
-			for _, i := range r.Items {
-				if channel.YtLastPublishedAt == "" || i.Snippet.PublishedAt > channel.YtLastPublishedAt {
-					videos = append(videos, *i.Snippet)
-					if len(videos)%1000 == 0 {
-						log("got 1k more videos from the playlist")
-					}
+		func(resp *youtube.PlaylistItemListResponse) error {
+			for _, item := range resp.Items {
+				if channel.YtLastPublishedAt == "" || item.Snippet.PublishedAt > channel.YtLastPublishedAt {
+					videos = append(videos, *item.Snippet)
 				}
+			}
+			if len(videos) >= Config.YtMaxResults {
+				return fmt.Errorf("got <%d> videos", len(videos))
 			}
 			return nil
 		},
