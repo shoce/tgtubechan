@@ -19,6 +19,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -104,6 +105,8 @@ var (
 
 	YtdlCl ytdl.Client
 	YtSvc  *youtube.Service
+
+	ENUFF = errors.New("ENUFF")
 
 	TgTitleCleanRe *regexp.Regexp
 )
@@ -294,11 +297,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				}
 			}
 			if int64(len(videos)) >= Config.YtMaxResults {
-				return fmt.Errorf("got <%d> videos", len(videos))
+				return ENUFF
 			}
 			return nil
 		},
-	); err != nil {
+	); err != nil && err != ENUFF {
 		return fmt.Errorf("playlistitems/list %v", err)
 	}
 
@@ -421,6 +424,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		log("downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
 			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration,
 		)
+
+		// TODO check size vs duration
 		if audioBuf.Len()>>10 < 400 {
 			return fmt.Errorf("downloaded audio is less than 400kb, aborting")
 		}
