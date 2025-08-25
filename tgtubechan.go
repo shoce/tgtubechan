@@ -282,12 +282,13 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 	}
 
-	// https://developers.google.com/youtube/v3/docs/playlistItems/list
-
 	var videos []youtube.PlaylistItemSnippet
 
+	// https://developers.google.com/youtube/v3/docs/playlistItems/list
 	playlistitemslistcall := YtSvc.PlaylistItems.List([]string{"id", "snippet", "contentDetails"}).MaxResults(Config.YtMaxResults)
 	playlistitemslistcall = playlistitemslistcall.PlaylistId(channel.YtPlaylistId)
+	// TODO request results only after some date
+	// TODO request results sorted by date asc
 	if err = playlistitemslistcall.Pages(
 		Ctx,
 		func(resp *youtube.PlaylistItemListResponse) error {
@@ -296,9 +297,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 					videos = append(videos, *item.Snippet)
 				}
 			}
-			if int64(len(videos)) >= Config.YtMaxResults {
-				return ENUFF
-			}
+			/*
+				if int64(len(videos)) >= Config.YtMaxResults {
+					return ENUFF
+				}
+			*/
 			return nil
 		},
 	); err != nil && err != ENUFF {
