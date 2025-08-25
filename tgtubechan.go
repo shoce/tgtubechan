@@ -315,7 +315,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	for j, v := range videos {
 		if Config.DEBUG {
 			tglog(
-				"DEBUG %s"+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
+				"DEBUG %s <%d>/<%d> title [%s]"+NL+"url [youtu.be/%s] published <%s>",
 				channel.YtUsername,
 				j+1,
 				len(videos),
@@ -427,7 +427,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
-		log("downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
+		log("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
 			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration,
 		)
 
@@ -466,8 +466,6 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		} else if err := os.Remove(audioFile); err != nil {
 			tglog("ERROR os.Remove %s %v", audioFile, err)
 		}
-
-		log("DEBUG audio size <%dmb>", len(audioBytes)>>20)
 
 		if !channel.TgSkipPhoto {
 
