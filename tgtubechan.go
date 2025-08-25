@@ -523,8 +523,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 
 		audioCaption := tg.Esc(
-			"%s"+NL+"%s"+NL+"youtu.be/%s %s",
-			vtitle, channel.TgPerformer, v.ResourceId.VideoId, vinfo.Duration,
+			"%s"+NL+"%s %s"+NL+"youtu.be/%s %s",
+			vtitle, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId, vinfo.Duration,
 		)
 
 		if _, err := tg.SendAudio(tg.SendAudioRequest{
