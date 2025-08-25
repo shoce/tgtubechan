@@ -311,7 +311,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	for j, v := range videos {
 		if Config.DEBUG {
 			tglog(
-				"DEBUG "+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
+				"DEBUG %s"+NL+"<%d>/<%d> title [%s] "+NL+"url [youtu.be/%s] "+NL+"published <%s> ",
+				channel.YtUsername,
 				j+1,
 				len(videos),
 				v.Title,
