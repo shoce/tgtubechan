@@ -293,7 +293,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 					videos = append(videos, *item.Snippet)
 				}
 			}
-			if len(videos) >= Config.YtMaxResults {
+			if int64(len(videos)) >= Config.YtMaxResults {
 				return fmt.Errorf("got <%d> videos", len(videos))
 			}
 			return nil
