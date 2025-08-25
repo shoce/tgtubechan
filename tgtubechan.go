@@ -196,7 +196,11 @@ func init() {
 	log("FfmpegPath [%s]", Config.FfmpegPath)
 	log("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
 
-	log("Channels ("+NL+"%+v"+NL+")", Config.Channels)
+	log("Channels (")
+	for _, channel := range Config.Channels {
+		log("%+v", channel)
+	}
+	log(")")
 
 	ytdl.VisitorIdMaxAge = 33 * time.Minute
 
