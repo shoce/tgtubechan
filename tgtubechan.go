@@ -52,8 +52,6 @@ const (
 )
 
 type TgTubeChanChannel struct {
-	Name string `yaml:"Name"`
-
 	YtUsername   string `yaml:"YtUsername"`
 	YtChannelId  string `yaml:"YtChannelId"`
 	YtPlaylistId string `yaml:"YtPlaylistId"`
@@ -173,13 +171,13 @@ func init() {
 	}
 
 	for i, channel := range Config.Channels {
-		if channel.Name == "" {
-			log("ERROR Channel <%d> Name empty", i)
+		if channel.YtUsername == "" {
+			log("ERROR Channel <%d> YtUsername empty", i)
 			os.Exit(1)
 		}
 		if channel.TgTitleCleanRe != "" {
 			if _, err := regexp.Compile(channel.TgTitleCleanRe); err != nil {
-				log("ERROR Channel %s TgTitleCleanRe [%s] %v", channel.Name, channel.TgTitleCleanRe, err)
+				log("ERROR Channel %s TgTitleCleanRe [%s] %v", channel.YtUsername, channel.TgTitleCleanRe, err)
 				os.Exit(1)
 			}
 		}
@@ -227,7 +225,7 @@ func main() {
 		for jchannel, _ := range Config.Channels {
 			channel := &Config.Channels[jchannel]
 			if err := processYtChannel(channel); err != nil {
-				tglog("ERROR processYtChannel %s %v", channel.Name, err)
+				tglog("ERROR processYtChannel %s %v", channel.YtUsername, err)
 			}
 		}
 
