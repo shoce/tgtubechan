@@ -54,10 +54,10 @@ const (
 type TgTubeChanChannel struct {
 	Name string `yaml:"Name"`
 
-	YtUsername        string `yaml:"YtUsername"`
-	YtChannelId       string `yaml:"YtChannelId"`
-	YtPlaylistId      string `yaml:"YtPlaylistId"`
-	YtLastPublishedAt string `yaml:"YtLastPublishedAt"`
+	YtUsername   string `yaml:"YtUsername"`
+	YtChannelId  string `yaml:"YtChannelId"`
+	YtPlaylistId string `yaml:"YtPlaylistId"`
+	YtLast       string `yaml:"YtLast"`
 
 	TgChatId          string `yaml:"TgChatId"`
 	TgPerformer       string `yaml:"TgPerformer"`
@@ -293,7 +293,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		Ctx,
 		func(resp *youtube.PlaylistItemListResponse) error {
 			for _, item := range resp.Items {
-				if channel.YtLastPublishedAt == "" || item.Snippet.PublishedAt > channel.YtLastPublishedAt {
+				if channel.YtLast == "" || item.Snippet.PublishedAt > channel.YtLast {
 					videos = append(videos, *item.Snippet)
 				}
 			}
@@ -571,7 +571,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		}
 
-		channel.YtLastPublishedAt = vpatime.Format(time.RFC3339)
+		channel.YtLast = vpatime.Format(time.RFC3339)
 		if err := Config.Put(); err != nil {
 			return fmt.Errorf("Config.Put %v", err)
 		}
