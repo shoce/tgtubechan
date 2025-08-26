@@ -297,16 +297,14 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		func(resp *youtube.PlaylistItemListResponse) error {
 			for jitem, item := range resp.Items {
 				log("DEBUG %s playlist item %02d %s", channel.YtUsername, jitem+1, item.Snippet.PublishedAt)
-				if channel.YtLast == "" || item.Snippet.PublishedAt > channel.YtLast {
-					videos = append(videos, *item.Snippet)
-				}
-			}
-			// TODO results are sorted by date desc, so stop Pages after receiving an item older than YtLast
-			/*
-				if int64(len(videos)) >= Config.YtMaxResults {
+				// item.Snippet.PublishedAt channel.YtLast are strings
+				// playlistitems/list results are sorted by date desc
+				// stop Pages after receiving an item older than YtLast
+				if channel.YtLast != "" && item.Snippet.PublishedAt <= channel.YtLast {
 					return ENUFF
 				}
-			*/
+				videos = append(videos, *item.Snippet)
+			}
 			return nil
 		},
 	); err != nil && err != ENUFF {
