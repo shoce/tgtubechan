@@ -12,6 +12,8 @@ go get github.com/kkdai/youtube/v2@master
 
 GoGet GoFmt GoBuildNull
 
+TODO cache playlists
+
 */
 
 package main
@@ -289,16 +291,17 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	// https://developers.google.com/youtube/v3/docs/playlistItems/list
 	playlistitemslistcall := YtSvc.PlaylistItems.List([]string{"id", "snippet", "contentDetails"}).MaxResults(Config.YtMaxResults)
 	playlistitemslistcall = playlistitemslistcall.PlaylistId(channel.YtPlaylistId)
-	// TODO request results only after some date
 	// TODO request results sorted by date asc
 	if err = playlistitemslistcall.Pages(
 		Ctx,
 		func(resp *youtube.PlaylistItemListResponse) error {
-			for _, item := range resp.Items {
+			for jitem, item := range resp.Items {
+				log("DEBUG %s playlist item %02d %s", channel.YtUsername, jitem+1, item.Snippet.PublishedAt)
 				if channel.YtLast == "" || item.Snippet.PublishedAt > channel.YtLast {
 					videos = append(videos, *item.Snippet)
 				}
 			}
+			// TODO results are sorted by date desc, so stop Pages after receiving an item older than YtLast
 			/*
 				if int64(len(videos)) >= Config.YtMaxResults {
 					return ENUFF
@@ -316,12 +319,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if Config.DEBUG {
 			tglog(
 				"DEBUG %s <%d>/<%d> title [%s]"+NL+"url [youtu.be/%s] published <%s>",
-				channel.YtUsername,
-				j+1,
-				len(videos),
-				v.Title,
-				v.ResourceId.VideoId,
-				v.PublishedAt,
+				channel.YtUsername, j+1, len(videos), v.Title,
+				v.ResourceId.VideoId, v.PublishedAt,
 			)
 		}
 
@@ -431,7 +430,6 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration,
 		)
 
-		// TODO check size vs duration
 		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
 			return fmt.Errorf("downloaded audio is less than half of expected size, aborting")
 		}
