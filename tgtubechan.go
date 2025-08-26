@@ -236,6 +236,7 @@ func main() {
 		}
 
 		if dur := time.Now().Sub(t0); dur < Config.Interval {
+			log("DEBUG sleeping %v", Config.Interval-dur)
 			time.Sleep(Config.Interval - dur)
 		}
 	}
