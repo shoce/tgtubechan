@@ -221,7 +221,7 @@ func main() {
 	signal.Notify(sigterm, syscall.SIGTERM)
 	go func(sigterm chan os.Signal) {
 		<-sigterm
-		tglog("%s: sigterm", os.Args[0])
+		tglog("%s sigterm", os.Args[0])
 		os.Exit(1)
 	}(sigterm)
 
@@ -616,7 +616,7 @@ func beats(td time.Duration) int {
 func ts() string {
 	tnow := time.Now().In(TZIST)
 	return fmt.Sprintf(
-		"%d%02d%02d:%02d%02d+",
+		"%d%02d%02d:%02d%02dॐ",
 		tnow.Year()%1000, tnow.Month(), tnow.Day(),
 		tnow.Hour(), tnow.Minute(),
 	)
