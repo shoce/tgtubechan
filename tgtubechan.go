@@ -231,11 +231,11 @@ func main() {
 		for jchannel, _ := range Config.Channels {
 			channel := &Config.Channels[jchannel]
 			if err := processYtChannel(channel); err != nil {
-				tglog("ERROR processYtChannel %s %v", channel.YtUsername, err)
+				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
 		}
 
-		if dur := time.Now().Sub(t0); dur < Config.Interval {
+		if dur := time.Now().Sub(t0).Truncate(time.Second); dur < Config.Interval {
 			log("DEBUG sleeping %v", Config.Interval-dur)
 			time.Sleep(Config.Interval - dur)
 		}
