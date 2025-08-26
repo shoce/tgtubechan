@@ -317,9 +317,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	for j, v := range videos {
 		if Config.DEBUG {
 			tglog(
-				"DEBUG %s <%d>/<%d> title [%s]"+NL+"url [youtu.be/%s] published <%s>",
-				channel.YtUsername, j+1, len(videos), v.Title,
-				v.ResourceId.VideoId, v.PublishedAt,
+				"DEBUG %s <%d>/<%d> title [%s] url [youtu.be/%s] published <%s>",
+				channel.YtUsername, j+1, len(videos), v.Title, v.ResourceId.VideoId, v.PublishedAt,
 			)
 		}
 
@@ -389,13 +388,12 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if err != nil {
 			return fmt.Errorf("download thumb url [%s] %v", thumbUrl, err)
 		}
-		log("DEBUG thumb url [%s] size <%dkb>", thumbUrl, len(thumbBytes)>>10)
 
 		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
 			log("ERROR thumb url [%s] decode %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			log("DEBUG thumb url [%s] fmt [%s] res [%dx%d]", thumbUrl, thumbImgFmt, dx, dy)
+			log("DEBUG thumb url [%s] size <%dkb> fmt [%s] res [%dx%d]", thumbUrl, len(thumbBytes)>>10, thumbImgFmt, dx, dy)
 		}
 
 		var audioFormat ytdl.Format
