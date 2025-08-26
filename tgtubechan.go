@@ -295,8 +295,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	if err = playlistitemslistcall.Pages(
 		Ctx,
 		func(resp *youtube.PlaylistItemListResponse) error {
-			for jitem, item := range resp.Items {
-				log("DEBUG %s playlist item %02d %s", channel.YtUsername, jitem+1, item.Snippet.PublishedAt)
+			for _, item := range resp.Items {
+				//log("DEBUG %s playlistitem %02d %s", channel.YtUsername, jitem+1, item.Snippet.PublishedAt)
 				// item.Snippet.PublishedAt channel.YtLast are strings
 				// playlistitems/list results are sorted by date desc
 				// stop Pages after receiving an item older than YtLast
