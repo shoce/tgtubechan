@@ -357,10 +357,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 			// can't bypass age restriction: embedding of this video has been disabled
 			if err2 := errors.Unwrap(err); err2 != nil && err2.Error() == "embedding of this video has been disabled" {
-				tgmsg := tg.Esc(
-					"embedding of this video has been disabled"+NL+"%s %s"+NL+"youtu.be/%s",
-					channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
-				)
+				tgmsg := tg.Italic("embedding of this video has been disabled") + NL +
+					tg.Esc(
+						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
+						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
+					)
 				if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
 					ChatId: channel.TgChatId,
 					Text:   tgmsg,
