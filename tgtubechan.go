@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -214,6 +215,8 @@ func init() {
 			},
 		},
 	}
+
+	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
@@ -225,11 +228,17 @@ func main() {
 		os.Exit(1)
 	}(sigterm)
 
+	channels := Config.Channels
+
 	for {
 		t0 := time.Now()
 
-		for jchannel, _ := range Config.Channels {
-			channel := &Config.Channels[jchannel]
+		rand.Shuffle(len(channels), func(i, j int) {
+			channels[i], channels[j] = channels[j], channels[i]
+		})
+
+		for jchannel, _ := range channels {
+			channel := &channels[jchannel]
 			if err := processYtChannel(channel); err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
