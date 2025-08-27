@@ -86,6 +86,7 @@ type TgTubeChanConfig struct {
 
 	YtKey        string `yaml:"YtKey"`
 	YtMaxResults int64  `yaml:"YtMaxResults"` // = 50
+	YtThrottle   int64  `yaml:"YtThrottle"`   // = 12
 
 	YtHttpClientUserAgent string `yaml:"YtHttpClientUserAgent"` // = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15"
 
@@ -192,12 +193,16 @@ func init() {
 	}
 
 	if Config.YtMaxResults == 0 {
-		tglog("ERROR YtMaxResults empty")
-		os.Exit(1)
+		Config.YtMaxResults = 50
 	}
 
-	log("FfmpegPath [%s]", Config.FfmpegPath)
-	log("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
+	if Config.YtThrottle == 0 {
+		Config.YtThrottle = 12
+	}
+	log("YtThrottle <%d>", Config.YtThrottle)
+
+	//log("FfmpegPath [%s]", Config.FfmpegPath)
+	//log("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
 
 	log("Channels (")
 	for _, channel := range Config.Channels {
@@ -445,7 +450,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 		defer ytstream.Close()
 
-		ytstreamslow := &SlowReader{Reader: ytstream, Bps: audioFormat.Bitrate * 4}
+		ytstreamslow := &SlowReader{Reader: ytstream, Bps: int64(audioFormat.Bitrate) * Config.YtThrottle}
 
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
@@ -614,7 +619,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 type SlowReader struct {
 	Reader io.Reader
-	Bps    int // bits per second
+	Bps    int64 // bits per second
 }
 
 func (sr *SlowReader) Read(p []byte) (int, error) {
