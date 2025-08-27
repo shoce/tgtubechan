@@ -282,7 +282,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 		for _, c := range channelslist.Items {
 			tglog(
-				"channel id [%s]"+NL+"title [%s]"+NL+"uploads playlist id <%v>"+NL,
+				"channel id [%s] title [%s] uploads playlist id <%v>",
 				c.Id, c.Snippet.Title, c.ContentDetails.RelatedPlaylists.Uploads,
 			)
 		}
