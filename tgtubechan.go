@@ -445,9 +445,12 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 		defer ytstream.Close()
 
+		ytstreamslow := &SlowReader{Reader: ytstream, Bps: audioFormat.Bitrate * 4}
+
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
-		if _, err = io.Copy(audioBuf, ytstream); err != nil {
+
+		if _, err = io.Copy(audioBuf, ytstreamslow); err != nil {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
@@ -607,6 +610,19 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	}
 
 	return nil
+}
+
+type SlowReader struct {
+	Reader io.Reader
+	Bps    int // bits per second
+}
+
+func (sr *SlowReader) Read(p []byte) (int, error) {
+	n, err := sr.Reader.Read(p)
+	if n > 0 && sr.Bps > 0 {
+		time.Sleep(time.Duration(float64(n<<3) / float64(sr.Bps) * float64(time.Second)))
+	}
+	return n, err
 }
 
 func downloadFile(url string) ([]byte, error) {
