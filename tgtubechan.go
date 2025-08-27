@@ -456,12 +456,13 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
 
+		t0dl := time.Now()
 		if _, err = io.Copy(audioBuf, ytstreamslow); err != nil {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
-		log("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v>",
-			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration,
+		log("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v> in <%v>",
+			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration, time.Now().Sub(t0dl).Truncate(time.Second),
 		)
 
 		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
