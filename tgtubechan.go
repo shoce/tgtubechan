@@ -573,7 +573,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 
 		if len(videos) > 3 {
-			log("DEBUG %s sleeping <%v>", channel, Config.TgPlaylistVideosInterval)
+			log("DEBUG %s sleeping <%v>", channel.YtUsername, Config.TgPlaylistVideosInterval)
 			time.Sleep(Config.TgPlaylistVideosInterval)
 		}
 	}
