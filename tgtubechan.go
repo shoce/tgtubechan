@@ -341,15 +341,34 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
 		if err != nil {
-			// TODO 23/5@415 New: #216 20221215.091855.8Q8QCOlhn5U: Прямая трансляция пользователя Сергей Бугаев
-			// TODO 23/5@415 GetVideoContext: cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
+
+			// cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
 				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" && time.Now().Sub(vpatime) > 24*time.Hour {
 					tglog("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
 					continue
 				}
 			}
+
+			// can't bypass age restriction: embedding of this video has been disabled
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Error() == "embedding of this video has been disabled" {
+				tgmsg := tg.Esc(
+					"embedding of this video has been disabled"+NL+"%s %s"+NL+"youtu.be/%s",
+					channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
+				)
+				if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
+					ChatId: channel.TgChatId,
+					Text:   tgmsg,
+
+					LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
+				}); tgerr != nil {
+					return fmt.Errorf("tg.SendMessage %v", tgerr)
+				}
+				continue
+			}
+
 			return fmt.Errorf("GetVideoContext %#v"+NL+"%#v", err, v)
+
 		}
 
 		vtitle = v.Title
