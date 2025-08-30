@@ -114,6 +114,8 @@ var (
 )
 
 func init() {
+	var err error
+
 	Ctx = context.TODO()
 
 	if v := os.Getenv("YssUrl"); v != "" {
@@ -192,6 +194,11 @@ func init() {
 		os.Exit(1)
 	}
 
+	if YtSvc, err = youtube.NewService(Ctx, youtubeoption.WithAPIKey(Config.YtKey)); err != nil {
+		tglog("ERROR youtube NewService %v", err)
+		os.Exit(1)
+	}
+
 	if Config.YtMaxResults == 0 {
 		Config.YtMaxResults = 50
 	}
@@ -244,6 +251,7 @@ func main() {
 
 		for jchannel, _ := range channels {
 			channel := &channels[jchannel]
+			log("DEBUG %s", channel.YtUsername)
 			if err := processYtChannel(channel); err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
@@ -257,11 +265,6 @@ func main() {
 }
 
 func processYtChannel(channel *TgTubeChanChannel) (err error) {
-	YtSvc, err = youtube.NewService(Ctx, youtubeoption.WithAPIKey(Config.YtKey))
-	if err != nil {
-		return fmt.Errorf("youtube NewService %v", err)
-	}
-
 	if channel.YtPlaylistId == "" {
 		if channel.YtUsername == "" && channel.YtChannelId == "" {
 			return fmt.Errorf("Empty YtUsername and YtChannelId, nothing to do")
