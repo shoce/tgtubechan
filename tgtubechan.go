@@ -88,7 +88,7 @@ type TgTubeChanConfig struct {
 	YtMaxResults int64  `yaml:"YtMaxResults"` // = 50
 	YtThrottle   int64  `yaml:"YtThrottle"`   // = 12
 
-	YtHttpClientUserAgent string `yaml:"YtHttpClientUserAgent"` // = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15"
+	YtUserAgent string `yaml:"YtUserAgent"` // = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15"
 
 	FfmpegPath          string   `yaml:"FfmpegPath"`          // = "/bin/ffmpeg"
 	FfmpegGlobalOptions []string `yaml:"FfmpegGlobalOptions"` // = []string{"-v", "panic"}
@@ -216,7 +216,7 @@ func init() {
 		HTTPClient: &http.Client{
 			Transport: &UserAgentTransport{
 				http.DefaultTransport,
-				Config.YtHttpClientUserAgent,
+				Config.YtUserAgent,
 			},
 		},
 	}
@@ -235,9 +235,9 @@ func main() {
 
 	channels := Config.Channels
 
-	for {
-		t0 := time.Now()
+	ticker := time.NewTicker(Config.Interval)
 
+	for {
 		rand.Shuffle(len(channels), func(i, j int) {
 			channels[i], channels[j] = channels[j], channels[i]
 		})
@@ -249,10 +249,8 @@ func main() {
 			}
 		}
 
-		if dur := time.Now().Sub(t0).Truncate(time.Second); dur < Config.Interval {
-			log("DEBUG sleeping %v", Config.Interval-dur)
-			time.Sleep(Config.Interval - dur)
-		}
+		log("DEBUG sleeping")
+		<-ticker.C
 	}
 
 	return
