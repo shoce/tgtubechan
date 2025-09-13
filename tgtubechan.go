@@ -374,6 +374,24 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				continue
 			}
 
+			// login required to confirm your age
+			if err.Error() == "login required to confirm your age" {
+				tgmsg := tg.Italic("login required to confirm your age") + NL +
+					tg.Esc(
+						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
+						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
+					)
+				if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
+					ChatId: channel.TgChatId,
+					Text:   tgmsg,
+
+					LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
+				}); tgerr != nil {
+					return fmt.Errorf("tg.SendMessage %v", tgerr)
+				}
+				continue
+			}
+
 			return fmt.Errorf("GetVideoContext %#v"+NL+"%#v", err, v)
 
 		}
