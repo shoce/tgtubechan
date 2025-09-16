@@ -2,7 +2,7 @@
 ARG APPNAME=tgtubechan
 
 # https://hub.docker.com/_/golang/tags
-FROM golang:1.25.0-alpine3.22 AS build
+FROM golang:1.25.1-alpine3.22 AS build
 ARG APPNAME
 ENV APPNAME=$APPNAME
 ENV CGO_ENABLED=0

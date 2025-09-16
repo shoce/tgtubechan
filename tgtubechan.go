@@ -66,6 +66,8 @@ type TgTubeChanChannel struct {
 	TgTitleUnquote    bool   `yaml:"TgTitleUnquote"`
 	TgSkipPhoto       bool   `yaml:"TgSkipPhoto"`
 	TgSkipDescription bool   `yaml:"TgSkipDescription"`
+
+	Suspend bool `yaml:"Suspend"`
 }
 
 type TgTubeChanConfig struct {
@@ -252,6 +254,10 @@ func main() {
 		for jchannel, _ := range channels {
 			channel := &channels[jchannel]
 			log("DEBUG %s", channel.YtUsername)
+			if channel.Suspend {
+				log("DEBUG %s Suspend <true>", channel.YtUsername)
+				continue
+			}
 			if err := processYtChannel(channel); err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
@@ -371,6 +377,12 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				}); tgerr != nil {
 					return fmt.Errorf("tg.SendMessage %v", tgerr)
 				}
+
+				channel.YtLast = vpatime.Format(time.RFC3339)
+				if err := Config.Put(); err != nil {
+					log("Config.Put %v", err)
+				}
+
 				continue
 			}
 
@@ -389,6 +401,12 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				}); tgerr != nil {
 					return fmt.Errorf("tg.SendMessage %v", tgerr)
 				}
+
+				channel.YtLast = vpatime.Format(time.RFC3339)
+				if err := Config.Put(); err != nil {
+					log("Config.Put %v", err)
+				}
+
 				continue
 			}
 
