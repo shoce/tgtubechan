@@ -488,13 +488,13 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 		defer ytstream.Close()
 
-		ytstreamslow := &SlowReader{Reader: ytstream, Bps: int64(audioFormat.Bitrate) * Config.YtThrottle}
+		ytstreamthrottled := &ThrottledReader{Reader: ytstream, Bps: int64(audioFormat.Bitrate) * Config.YtThrottle}
 
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
 
 		t0dl := time.Now()
-		if _, err = io.Copy(audioBuf, ytstreamslow); err != nil {
+		if _, err = io.Copy(audioBuf, ytstreamthrottled); err != nil {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
@@ -656,12 +656,12 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	return nil
 }
 
-type SlowReader struct {
+type ThrottledReader struct {
 	Reader io.Reader
 	Bps    int64 // bits per second
 }
 
-func (sr *SlowReader) Read(p []byte) (int, error) {
+func (sr *ThrottledReader) Read(p []byte) (int, error) {
 	n, err := sr.Reader.Read(p)
 	if n > 0 && sr.Bps > 0 {
 		time.Sleep(time.Duration(float64(n<<3) / float64(sr.Bps) * float64(time.Second)))
