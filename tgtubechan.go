@@ -464,7 +464,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			log("ERROR thumb url [%s] decode %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			log("DEBUG thumb url [%s] size <%dkb> fmt [%s] res [%dx%d]", thumbUrl, len(thumbBytes)>>10, thumbImgFmt, dx, dy)
+			log("DEBUG thumb url [%s] fmt [%s] size <%dkb> res <%dx%d>", thumbUrl, thumbImgFmt, len(thumbBytes)>>10, dx, dy)
 		}
 
 		var audioFormat ytdl.Format

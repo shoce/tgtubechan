@@ -12,7 +12,7 @@ require (
 require (
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/compute/metadata v0.8.0 // indirect
+	cloud.google.com/go/compute/metadata v0.8.3 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dop251/goja v0.0.0-20250630131328-58d95d85e994 // indirect
