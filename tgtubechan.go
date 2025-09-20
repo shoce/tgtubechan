@@ -441,32 +441,6 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			v.ResourceId.VideoId,
 		)
 
-		var thumbUrl string
-		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
-			thumbUrl = v.Thumbnails.Maxres.Url
-		} else if v.Thumbnails.Standard != nil && v.Thumbnails.Standard.Url != "" {
-			thumbUrl = v.Thumbnails.Standard.Url
-		} else if v.Thumbnails.High != nil && v.Thumbnails.High.Url != "" {
-			thumbUrl = v.Thumbnails.High.Url
-		} else if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
-			thumbUrl = v.Thumbnails.Medium.Url
-		} else {
-			return fmt.Errorf("no thumb url")
-		}
-
-		var thumbBytes []byte
-		thumbBytes, err = downloadFile(thumbUrl)
-		if err != nil {
-			return fmt.Errorf("download thumb url [%s] %v", thumbUrl, err)
-		}
-
-		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
-			log("ERROR thumb url [%s] decode %v", thumbUrl, err)
-		} else {
-			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			log("DEBUG thumb url [%s] fmt [%s] size <%dkb> res <%dx%d>", thumbUrl, thumbImgFmt, len(thumbBytes)>>10, dx, dy)
-		}
-
 		var audioFormat ytdl.Format
 		for _, f := range vinfo.Formats.WithAudioChannels() {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
@@ -503,7 +477,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		)
 
 		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
-			return fmt.Errorf("downloaded audio is less than half of expected size, aborting")
+			return fmt.Errorf("downloaded audio size is less than half of expected")
 		}
 
 		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
@@ -535,6 +509,32 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("ReadFile %s %v", audioFile, err)
 		} else if err := os.Remove(audioFile); err != nil {
 			tglog("ERROR os.Remove %s %v", audioFile, err)
+		}
+
+		var thumbUrl string
+		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
+			thumbUrl = v.Thumbnails.Maxres.Url
+		} else if v.Thumbnails.Standard != nil && v.Thumbnails.Standard.Url != "" {
+			thumbUrl = v.Thumbnails.Standard.Url
+		} else if v.Thumbnails.High != nil && v.Thumbnails.High.Url != "" {
+			thumbUrl = v.Thumbnails.High.Url
+		} else if v.Thumbnails.Medium != nil && v.Thumbnails.Medium.Url != "" {
+			thumbUrl = v.Thumbnails.Medium.Url
+		} else {
+			return fmt.Errorf("no thumb url")
+		}
+
+		var thumbBytes []byte
+		thumbBytes, err = downloadFile(thumbUrl)
+		if err != nil {
+			return fmt.Errorf("download thumb url [%s] %v", thumbUrl, err)
+		}
+
+		if thumbImg, thumbImgFmt, err := image.Decode(bytes.NewReader(thumbBytes)); err != nil {
+			log("ERROR thumb url [%s] decode %v", thumbUrl, err)
+		} else {
+			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
+			log("DEBUG thumb url [%s] fmt [%s] size <%dkb> res <%dx%d>", thumbUrl, thumbImgFmt, len(thumbBytes)>>10, dx, dy)
 		}
 
 		if !channel.TgSkipPhoto {
