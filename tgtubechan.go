@@ -253,10 +253,11 @@ func main() {
 
 		for jchannel, _ := range channels {
 			channel := &channels[jchannel]
-			log("DEBUG %s", channel.YtUsername)
 			if channel.Suspend {
 				log("DEBUG %s Suspend <true>", channel.YtUsername)
 				continue
+			} else {
+				log("DEBUG %s", channel.YtUsername)
 			}
 			if err := processYtChannel(channel); err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
@@ -446,12 +447,16 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			if !strings.HasPrefix(f.MimeType, "audio/mp4") {
 				continue
 			}
-			log("DEBUG format size <%dmb> AudioTrack %+v", f.ContentLength>>20, f.AudioTrack)
+			if Config.DEBUG {
+				log("DEBUG format size <%dmb> AudioTrack %+v", f.ContentLength>>20, f.AudioTrack)
+			}
 			if f.AudioTrack != nil && !strings.HasSuffix(f.AudioTrack.DisplayName, " original") {
 				continue
 			}
 			if audioFormat.Bitrate == 0 || f.Bitrate > audioFormat.Bitrate {
-				log("DEBUG pick")
+				if Config.DEBUG {
+					log("DEBUG pick")
+				}
 				audioFormat = f
 			}
 		}
@@ -473,9 +478,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
-		log("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v> in <%v>",
-			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration, time.Now().Sub(t0dl).Truncate(time.Second),
-		)
+		if Config.DEBUG {
+			log("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v> in <%v>",
+				audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration, time.Now().Sub(t0dl).Truncate(time.Second),
+			)
+		}
 
 		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
 			return fmt.Errorf("downloaded audio size is less than half of expected")
@@ -489,7 +496,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		audioFile := audioSrcFile
 
 		if Config.FfmpegPath != "" && Config.TgAudioBitrateKbps > 0 {
-			log("DEBUG target audio bitrate <%dkbps>", Config.TgAudioBitrateKbps)
+			if Config.DEBUG {
+				log("DEBUG target audio bitrate <%dkbps>", Config.TgAudioBitrateKbps)
+			}
 			audioFile = fmt.Sprintf("%s..%dk..m4a", audioName, Config.TgAudioBitrateKbps)
 			ffmpegArgs := append(Config.FfmpegGlobalOptions,
 				"-i", audioSrcFile,
@@ -535,7 +544,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			log("ERROR thumb url [%s] decode %v", thumbUrl, err)
 		} else {
 			dx, dy := thumbImg.Bounds().Dx(), thumbImg.Bounds().Dy()
-			log("DEBUG thumb url [%s] fmt [%s] size <%dkb> res <%dx%d>", thumbUrl, thumbImgFmt, len(thumbBytes)>>10, dx, dy)
+			if Config.DEBUG {
+				log("DEBUG thumb url [%s] fmt [%s] size <%dkb> res <%dx%d>", thumbUrl, thumbImgFmt, len(thumbBytes)>>10, dx, dy)
+			}
 		}
 
 		if !channel.TgSkipPhoto {
@@ -649,7 +660,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		}
 
 		if len(videos) > 3 {
-			log("DEBUG %s sleeping <%v>", channel.YtUsername, Config.TgPlaylistVideosInterval)
+			if Config.DEBUG {
+				log("DEBUG %s sleeping <%v>", channel.YtUsername, Config.TgPlaylistVideosInterval)
+			}
 			time.Sleep(Config.TgPlaylistVideosInterval)
 		}
 	}
