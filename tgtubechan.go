@@ -365,10 +365,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			// can't bypass age restriction: embedding of this video has been disabled
 			if err2 := errors.Unwrap(err); err2 != nil && err2.Error() == "embedding of this video has been disabled" {
 				tgmsg := tg.Italic("embedding of this video has been disabled") + NL +
-					tg.Esc(
+					tg.Esc(tg.F(
 						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
 						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
-					)
+					))
 				if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
 					ChatId: channel.TgChatId,
 					Text:   tgmsg,
@@ -389,10 +389,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			// login required to confirm your age
 			if err.Error() == "login required to confirm your age" {
 				tgmsg := tg.Italic("login required to confirm your age") + NL +
-					tg.Esc(
+					tg.Esc(tg.F(
 						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
 						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
-					)
+					))
 				if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
 					ChatId: channel.TgChatId,
 					Text:   tgmsg,
@@ -464,6 +464,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		ytstreamthrottled := &ThrottledReader{Reader: ytstream, Bps: int64(audioFormat.Bitrate) * Config.YtThrottle}
 
+		// https://pkg.go.dev/bytes#Buffer
 		var audioBuf *bytes.Buffer
 		audioBuf = bytes.NewBuffer(nil)
 
@@ -595,10 +596,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 		}
 
-		audioCaption := tg.Esc(
+		audioCaption := tg.Esc(tg.F(
 			"%s"+NL+"%s %s"+NL+"youtu.be/%s %s",
 			vtitle, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId, vinfo.Duration,
-		)
+		))
 
 		if _, err := tg.SendAudio(tg.SendAudioRequest{
 			ChatId:  channel.TgChatId,
@@ -716,7 +717,7 @@ func tglog(msg string, args ...interface{}) (err error) {
 	log(msg, args...)
 	if _, err = tg.SendMessage(tg.SendMessageRequest{
 		ChatId: Config.TgChatId,
-		Text:   tg.Esc(msg, args...),
+		Text:   tg.Esc(tg.F(msg, args...)),
 
 		DisableNotification: true,
 		LinkPreviewOptions:  tg.LinkPreviewOptions{IsDisabled: true},
