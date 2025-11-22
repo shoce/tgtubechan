@@ -337,12 +337,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
 	for j, v := range videos {
-		if Config.DEBUG {
-			tglog(
-				"DEBUG %s <%d>/<%d> title [%s] url [youtu.be/%s] published <%s>",
-				channel.YtUsername, j+1, len(videos), v.Title, v.ResourceId.VideoId, v.PublishedAt,
-			)
-		}
+		log(
+			"DEBUG %s <%d>/<%d> title [%s] url [youtu.be/%s] published <%s>",
+			channel.YtUsername, j+1, len(videos), v.Title, v.ResourceId.VideoId, v.PublishedAt,
+		)
 
 		var vpatime time.Time
 		var vtitle string
@@ -358,7 +356,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			// cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
 				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" && time.Now().Sub(vpatime) > 24*time.Hour {
-					tglog("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
+					log("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
 					continue
 				}
 			}
