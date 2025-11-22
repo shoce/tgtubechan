@@ -215,7 +215,7 @@ func init() {
 
 	log("Channels (")
 	for _, channel := range Config.Channels {
-		log("%+v", channel)
+		log("{ @Suspend <%v> @YtUsername %s @YtLast <%s> }", channel.Suspend, channel.YtUsername, channel.YtLast)
 	}
 	log(")")
 
