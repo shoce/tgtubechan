@@ -113,6 +113,8 @@ var (
 	ENUFF = errors.New("ENUFF")
 
 	TgTitleCleanRe *regexp.Regexp
+
+	BTOI = map[bool]int{false: 0, true: 1}
 )
 
 func init() {
@@ -215,7 +217,7 @@ func init() {
 
 	log("Channels (")
 	for _, channel := range Config.Channels {
-		log("{ @Suspend <%v> @YtUsername %s @YtLast <%s> }", channel.Suspend, channel.YtUsername, channel.YtLast)
+		log("{ @Suspend <%v> @YtUsername %s @YtLast <%s> }", BTOI[channel.Suspend], channel.YtUsername, channel.YtLast)
 	}
 	log(")")
 
