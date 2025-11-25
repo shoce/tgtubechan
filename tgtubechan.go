@@ -257,17 +257,23 @@ func main() {
 		for jchannel, _ := range channels {
 			channel := &channels[jchannel]
 			if channel.Suspend {
-				log("DEBUG %s Suspend <true>", channel.YtUsername)
+				if Config.DEBUG {
+					log("DEBUG %s suspended", channel.YtUsername)
+				}
 				continue
 			} else {
-				log("DEBUG %s", channel.YtUsername)
+				if Config.DEBUG {
+					log("DEBUG %s", channel.YtUsername)
+				}
 			}
 			if err := processYtChannel(channel); err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
 		}
 
-		log("DEBUG sleeping")
+		if Config.DEBUG {
+			log("DEBUG sleeping")
+		}
 		<-ticker.C
 	}
 
