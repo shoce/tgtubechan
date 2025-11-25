@@ -137,6 +137,7 @@ func init() {
 
 	if Config.DEBUG {
 		log("DEBUG <true>")
+		tg.DEBUG = true
 	}
 
 	log("Interval <%v>", Config.Interval)
