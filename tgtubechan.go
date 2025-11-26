@@ -218,7 +218,7 @@ func init() {
 
 	log("Channels (")
 	for _, channel := range Config.Channels {
-		log("{ @Suspend <%v> @YtUsername %s @YtLast <%s> }", BTOI[channel.Suspend], channel.YtUsername, channel.YtLast)
+		log("{ @Suspend <%v> @YtUsername [%s] @YtLast <%s> }", BTOI[channel.Suspend], channel.YtUsername, channel.YtLast)
 	}
 	log(")")
 
