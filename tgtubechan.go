@@ -12,6 +12,8 @@ go get github.com/kkdai/youtube/v2@master
 
 GoGet GoFmt GoBuildNull
 
+https://github.com/shoce/tgtubechan/actions
+
 TODO cache playlists
 
 */
