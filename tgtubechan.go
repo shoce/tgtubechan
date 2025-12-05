@@ -563,7 +563,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			var tgcover tg.PhotoSize
 			if tgmsg, err := tg.SendPhotoFile(tg.SendPhotoFileRequest{
 				ChatId:   channel.TgChatId,
-				FileName: audioName,
+				FileName: audioName + "..photo",
 				Photo:    bytes.NewReader(thumbBytes),
 			}); err != nil {
 				return fmt.Errorf("ERROR tg.SendPhotoFile %v", err)
