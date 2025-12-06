@@ -1,8 +1,7 @@
 apiVersion: v2
 name: helm.tgtubechan
-description: Telegram bot to mirror a Youtube channel to a Telegram channel
+description: Telegram bot to mirror Youtube channels to Telegram channels
 type: application
 version: __VERSION__
-appVersion: __VERSION__
 home: https://github.com/shoce/tgtubechan/
 
