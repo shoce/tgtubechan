@@ -53,9 +53,13 @@ import (
 )
 
 const (
+	SP = " "
 	NL = "\n"
 
 	BEAT = time.Duration(24) * time.Hour / 1000
+
+	MsgEmbeddingDisabled = "embedding of this video has been disabled"
+	MsgLoginRequired     = "login required to confirm your age"
 )
 
 type TgTubeChanChannel struct {
@@ -228,15 +232,6 @@ func init() {
 
 	ytdl.VisitorIdMaxAge = 33 * time.Minute
 
-	YtdlCl = ytdl.Client{
-		HTTPClient: &http.Client{
-			Transport: &UserAgentTransport{
-				http.DefaultTransport,
-				Config.YtUserAgent,
-			},
-		},
-	}
-
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -349,17 +344,23 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 	sort.Slice(videos, func(i, j int) bool { return videos[i].PublishedAt < videos[j].PublishedAt })
 
+	YtdlCl = ytdl.Client{
+		HTTPClient: &http.Client{
+			Transport: &UserAgentTransport{
+				http.DefaultTransport,
+				Config.YtUserAgent,
+			},
+		},
+	}
+
 	for j, v := range videos {
 		perr(
 			"DEBUG %s <%d>/<%d> title [%s] url [youtu.be/%s] published <%s>",
 			channel.YtUsername, j+1, len(videos), v.Title, v.ResourceId.VideoId, v.PublishedAt,
 		)
 
-		var vpatime time.Time
-		var vtitle string
-		var audioName string
-
-		if vpatime, err = time.Parse(time.RFC3339, v.PublishedAt); err != nil {
+		vpatime, err := time.Parse(time.RFC3339, v.PublishedAt)
+		if err != nil {
 			return fmt.Errorf("time.Parse PublishedAt [%s] %v", v.PublishedAt, err)
 		}
 
@@ -375,8 +376,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 
 			// can't bypass age restriction: embedding of this video has been disabled
-			if err2 := errors.Unwrap(err); err2 != nil && err2.Error() == "embedding of this video has been disabled" {
-				tgmsg := tg.Italic("embedding of this video has been disabled") + NL +
+			if err2 := errors.Unwrap(err); err2 != nil && err2.Error() == MsgEmbeddingDisabled {
+				tgmsg := tg.Italic(MsgEmbeddingDisabled) + NL +
 					tg.Esc(tg.F(
 						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
 						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
@@ -399,8 +400,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 
 			// login required to confirm your age
-			if err.Error() == "login required to confirm your age" {
-				tgmsg := tg.Italic("login required to confirm your age") + NL +
+			if err.Error() == MsgLoginRequired {
+				tgmsg := tg.Italic(MsgLoginRequired) + NL +
 					tg.Esc(tg.F(
 						"%s"+NL+"%s %s"+NL+"youtu.be/%s",
 						v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
@@ -426,7 +427,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		}
 
-		vtitle = v.Title
+		vtitle := v.Title
 
 		if TgTitleCleanRe != nil {
 			vtitle = TgTitleCleanRe.ReplaceAllString(vtitle, "")
@@ -446,7 +447,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 		}
 
-		audioName = fmt.Sprintf(
+		audioName := fmt.Sprintf(
 			"%04d%02d%02d.%02d%02d%02d.%s",
 			vpatime.Year(), vpatime.Month(), vpatime.Day(),
 			vpatime.Hour(), vpatime.Minute(), vpatime.Second(),
