@@ -367,12 +367,38 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		vinfo, err := YtdlCl.GetVideoContext(Ctx, v.ResourceId.VideoId)
 		if err != nil {
 
-			// cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 			if _, ok := err.(*ytdl.ErrPlayabiltyStatus); ok {
+
+				// cannot playback and download, status: LIVE_STREAM_OFFLINE, reason: This live event will begin in a few moments.
 				if err.(*ytdl.ErrPlayabiltyStatus).Status == "LIVE_STREAM_OFFLINE" && time.Now().Sub(vpatime) > 24*time.Hour {
 					perr("DEBUG GetVideoContext skipping LIVE_STREAM_OFFLINE youtu.be/%s", v.ResourceId.VideoId)
 					continue
 				}
+
+				// youtu.be/6L37mxTMxcQ Video unavailable. This video contains content from Beggars Group Digital, who has blocked it in your country on copyright grounds.
+				if err.(*ytdl.ErrPlayabiltyStatus).Status == "UNPLAYABLE" {
+					tgmsg := tg.Italic("UNPLAYABLE") + NL +
+						tg.Esc(tg.F(
+							"%s"+NL+"%s %s"+NL+"youtu.be/%s",
+							v.Title, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId,
+						))
+					if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
+						ChatId: channel.TgChatId,
+						Text:   tgmsg,
+
+						LinkPreviewOptions: tg.LinkPreviewOptions{IsDisabled: true},
+					}); tgerr != nil {
+						return fmt.Errorf("tg.SendMessage %v", tgerr)
+					}
+
+					channel.YtLast = vpatime.Format(time.RFC3339)
+					if err := Config.Put(); err != nil {
+						perr("Config.Put %v", err)
+					}
+
+					continue
+				}
+
 			}
 
 			// can't bypass age restriction: embedding of this video has been disabled
