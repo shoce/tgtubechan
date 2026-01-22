@@ -85,23 +85,23 @@ type TgTubeChanConfig struct {
 
 	Interval time.Duration `yaml:"Interval"`
 
-	TgApiUrlBase string `yaml:"TgApiUrlBase"` // = "https://api.telegram.org"
+	TgApiUrlBase string `yaml:"TgApiUrlBase"` // "https://api.telegram.org"
 
 	TgToken  string `yaml:"TgToken"`
 	TgChatId string `yaml:"TgChatId"`
 
 	TgPlaylistVideosInterval time.Duration `yaml:"TgPlaylistVideosInterval"`
 
-	TgAudioBitrateKbps int64 `yaml:"TgAudioBitrateKbps"` // = 60
+	TgAudioBitrateKbps int64 `yaml:"TgAudioBitrateKbps"` // 60
 
 	YtKey        string `yaml:"YtKey"`
-	YtMaxResults int64  `yaml:"YtMaxResults"` // = 50
-	YtThrottle   int64  `yaml:"YtThrottle"`   // = 12
+	YtMaxResults int64  `yaml:"YtMaxResults"` // 50
+	YtThrottle   int64  `yaml:"YtThrottle"`   // 12
 
-	YtUserAgent string `yaml:"YtUserAgent"` // = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15"
+	YtUserAgent string `yaml:"YtUserAgent"` // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15"
 
-	FfmpegPath          string   `yaml:"FfmpegPath"`          // = "/bin/ffmpeg"
-	FfmpegGlobalOptions []string `yaml:"FfmpegGlobalOptions"` // = []string{"-v", "panic"}
+	FfmpegPath          string   `yaml:"FfmpegPath"`          // "/bin/ffmpeg"
+	FfmpegGlobalOptions []string `yaml:"FfmpegGlobalOptions"` // []string{"-v", "panic"}
 
 	Channels []TgTubeChanChannel `yaml:"Channels"`
 }
@@ -221,8 +221,8 @@ func init() {
 	}
 	perr("YtThrottle <%d>", Config.YtThrottle)
 
-	//log("FfmpegPath [%s]", Config.FfmpegPath)
-	//log("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
+	perr("FfmpegPath [%s]", Config.FfmpegPath)
+	perr("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
 
 	perr("Channels (")
 	for _, channel := range Config.Channels {
