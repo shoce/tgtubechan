@@ -2,43 +2,40 @@
 ARG APPNAME=tgtubechan
 
 # https://hub.docker.com/_/golang/tags
-FROM golang:1.25.1-alpine3.22 AS build
+FROM golang:1.25-alpine AS build
 ARG APPNAME
 ENV APPNAME=$APPNAME
 ENV CGO_ENABLED=0
 
-#ARG TARGETARCH
-#
-#RUN apt update
-#RUN apt -y -q install xz-utils
-#
-#RUN mkdir -p /src/ffmpeg/
-#WORKDIR /src/ffmpeg/
-#RUN curl -s -S -L -O https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-$TARGETARCH-static.tar.xz
-#RUN tar -x -J -f ffmpeg-release-$TARGETARCH-static.tar.xz
-#RUN mv ffmpeg-*-static/ffmpeg ffmpeg
-#RUN ls -l -a
-#RUN ./ffmpeg -version
+RUN mkdir -p /$APPNAME/
+WORKDIR /$APPNAME/
 
-RUN mkdir -p /src/$APPNAME/
-WORKDIR /src/$APPNAME/
-COPY *.go go.mod go.sum /src/$APPNAME/
+COPY *.go go.mod go.sum /$APPNAME/
 RUN go version
 RUN go get -v
 RUN go build -o $APPNAME .
 RUN ls -l -a
 
+ARG TARGETARCH
+
+RUN wget -q -O- https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-$TARGETARCH-static.tar.xz | tar -x -J -v
+RUN mv ffmpeg-*-static/ffmpeg ffmpeg && rm -r -f -v ffmpeg-*-static
+RUN ls -l -a
+RUN ./ffmpeg -version
+
+
 
 # https://hub.docker.com/_/alpine/tags
-FROM alpine:3.22
+FROM alpine:3
 ARG APPNAME
 ENV APPNAME=$APPNAME
-RUN apk add --no-cache tzdata
-RUN apk add --no-cache gcompat && ln -s -f -v ld-linux-x86-64.so.2 /lib/libresolv.so.2
+RUN apk add --no-cache tzdata gcompat && ln -s -f -v ld-linux-x86-64.so.2 /lib/libresolv.so.2
 
-#COPY --from=build /src/$APPNAME/ffmpeg /bin/ffmpeg
-COPY --from=build /src/$APPNAME/$APPNAME /bin/$APPNAME
-
-ENTRYPOINT /bin/$APPNAME
+RUN mkdir -p /$APPNAME/
+COPY --from=build /$APPNAME/$APPNAME /$APPNAME/$APPNAME
+COPY --from=build /$APPNAME/ffmpeg /$APPNAME/ffmpeg
+RUN mkdir -p /$APPNAME/downloads/
+WORKDIR /$APPNAME/downloads/
+ENTRYPOINT /$APPNAME/$APPNAME
 
 
