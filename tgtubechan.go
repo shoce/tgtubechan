@@ -232,6 +232,19 @@ func init() {
 
 	ytdl.VisitorIdMaxAge = 33 * time.Minute
 
+	// https://pkg.go.dev/github.com/kkdai/youtube/v2/#pkg-variables
+	/*
+		ytdl.IOSClient = ytdl.clientInfo{
+			name:        "IOS",
+			version:     "19.49.7",
+			key:         "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
+			userAgent:   "com.google.ios.youtube/19.49.7 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)",
+			deviceModel: "iPhone16,2",
+		}
+	*/
+	// WebClient AndroidClient IOSClient EmbeddedClient
+	ytdl.DefaultClient = ytdl.IOSClient
+
 	rand.Seed(time.Now().UnixNano())
 }
 
