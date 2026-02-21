@@ -1,12 +1,13 @@
 module github.com/shoce/tgtubechan
 
-go 1.24.11
+go 1.25.0
 
 require (
 	github.com/kkdai/youtube/v2 v2.10.6-0.20260207173326-077149d8ac32
-	github.com/shoce/tg v0.260119.2205
+	github.com/shoce/tg v0.260222.103
+	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa
 	golang.org/x/image v0.36.0
-	google.golang.org/api v0.266.0
+	google.golang.org/api v0.267.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -17,7 +18,7 @@ require (
 	github.com/bitly/go-simplejson v0.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
-	github.com/dop251/goja v0.0.0-20260106131823-651366fbe6e3 // indirect
+	github.com/dop251/goja v0.0.0-20260219130522-0ba9a5494a59 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -37,7 +38,7 @@ require (
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
 	google.golang.org/grpc v1.79.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
