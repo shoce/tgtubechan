@@ -130,12 +130,18 @@ var (
 
 	TgTitleCleanRe *regexp.Regexp
 
+	YtChannelReText = `youtube\.com/@([-_A-Za-z0-9]+)`
+	YtChannelRe     *regexp.Regexp
+
 	BTOI = map[bool]int{false: 0, true: 1}
 )
 
 func init() {
 
 	Ctx = context.TODO()
+
+	// https://pkg.go.dev/regexp
+	YtChannelRe = regexp.MustCompile(YtChannelReText)
 
 	if v := os.Getenv("YssUrl"); v != "" {
 		Config.YssUrl = v
@@ -192,6 +198,7 @@ func ConfigGet() (err error) {
 		perr("ERROR TgApiUrl empty")
 		if Config.TgApiUrlBase != "" {
 			Config.TgApiUrl = Config.TgApiUrlBase
+			perr("TgApiUrl [%s]", Config.TgApiUrl)
 		} else {
 			os.Exit(1)
 		}
@@ -361,16 +368,42 @@ func TgGetUpdates() (err error) {
 				perr("ERROR tg.GetChat <%d> %v", cm.Chat.Id, err)
 				tgmsg = tg.Bold(cm.Chat.Title) + NL + NL + tg.Italic("no description")
 			} else {
-				tgmsg = tg.Bold(chatfullinfo.Title) + NL + NL + tg.Esc(chatfullinfo.Description)
+				tgmsg = tg.Bold(strings.ToUpper(chatfullinfo.Title)) + NL + NL + tg.Esc(chatfullinfo.Description)
 			}
 
 			if _, err := tg.SendMessage(tg.SendMessageRequest{
 				ChatId: fmt.Sprintf("%d", cm.Chat.Id),
 				Text:   tgmsg,
 			}); err != nil {
-				perr("tg.SendMessage: %v", err)
+				perr("tg.SendMessage %v", err)
 				return err
 			}
+
+			if YtChannelRe.MatchString(chatfullinfo.Description) {
+				// https://pkg.go.dev/regexp#Regexp.FindStringSubmatch
+				ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description)
+				if ssm == nil || len(ssm) != 2 {
+					perr("ERROR YtChannelRe regexp is broken")
+					return nil
+				}
+				newchannel := TgTubeChanChannel{
+					YtUsername:        ssm[1],
+					TgChatId:          tg.F("%d", chatfullinfo.Id),
+					TgPerformer:       chatfullinfo.Title,
+					TgSkipPhoto:       false,
+					TgSkipDescription: false,
+				}
+				perr("DEBUG new channel %#v", newchannel)
+				if _, err := tg.SendMessage(tg.SendMessageRequest{
+					ChatId: fmt.Sprintf("%d", cm.Chat.Id),
+					Text:   tg.Esc(tg.F("new channel %#v", newchannel)),
+				}); err != nil {
+					perr("tg.SendMessage %v", err)
+					return err
+				}
+
+			}
+
 		}
 	}
 
