@@ -59,6 +59,8 @@ const (
 
 	BEAT = time.Duration(24) * time.Hour / 1000
 
+	TgUpdateLogMaxSizeDefault = 12
+
 	MsgEmbeddingDisabled = "embedding of this video has been disabled"
 	MsgLoginRequired     = "login required to confirm your age"
 )
@@ -94,7 +96,7 @@ type TgTubeChanConfig struct {
 	TgBossId string `yaml:"TgBossId"`
 
 	TgUpdateLog        []int64 `yaml:"TgUpdateLog,flow"`
-	TgUpdateLogMaxSize int     `yaml:"TgUpdateLogMaxSize"` // = 108
+	TgUpdateLogMaxSize int     `yaml:"TgUpdateLogMaxSize"` // = 12
 
 	TgPlaylistVideosInterval time.Duration `yaml:"TgPlaylistVideosInterval"`
 
@@ -219,6 +221,12 @@ func ConfigGet() (err error) {
 	if Config.TgBossId == "" {
 		return fmt.Errorf("TgBossId empty")
 	}
+
+	perr("TgUpdateLog %v", Config.TgUpdateLog)
+	if Config.TgUpdateLogMaxSize <= 0 {
+		Config.TgUpdateLogMaxSize = TgUpdateLogMaxSizeDefault
+	}
+	perr("TgUpdateLogMaxSize <%d>", Config.TgUpdateLogMaxSize)
 
 	if Config.TgPlaylistVideosInterval == 0 {
 		return fmt.Errorf("TgPlaylistVideosInterval empty")
@@ -400,6 +408,11 @@ func TgGetUpdates() (err error) {
 				}); err != nil {
 					perr("tg.SendMessage %v", err)
 					return err
+				}
+
+				Config.Channels = append(Config.Channels, newchannel)
+				if err := Config.Put(); err != nil {
+					return fmt.Errorf("Config.Put %v", err)
 				}
 
 			}
