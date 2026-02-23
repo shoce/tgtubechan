@@ -437,7 +437,7 @@ func TgGetUpdates() (err error) {
 func processYtChannel(channel *TgTubeChanChannel) (err error) {
 	if channel.YtPlaylistId == "" {
 		if channel.YtUsername == "" && channel.YtChannelId == "" {
-			return fmt.Errorf("Empty YtUsername and YtChannelId, nothing to do")
+			return fmt.Errorf("both YtUsername and YtChannelId empty")
 		}
 
 		// https://developers.google.com/youtube/v3/docs/channels/list
@@ -446,7 +446,8 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if channel.YtChannelId != "" {
 			channelslistcall = channelslistcall.Id(channel.YtChannelId)
 		} else if channel.YtUsername != "" {
-			channelslistcall = channelslistcall.ForUsername(channel.YtUsername)
+			// https://developers.google.com/youtube/v3/docs/channels/list#forHandle
+			channelslistcall = channelslistcall.ForHandle(channel.YtUsername)
 		}
 		channelslist, err := channelslistcall.Do()
 		if err != nil {
