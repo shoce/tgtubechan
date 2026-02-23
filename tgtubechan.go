@@ -392,12 +392,12 @@ func TgGetUpdates() (err error) {
 				ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description)
 				if ssm == nil || len(ssm) != 2 {
 					perr("ERROR YtChannelRe regexp is broken")
-					return nil
+					return fmt.Errorf("YtChannelRe regexp is broken FindStringSubmatch %#v", ssm)
 				}
 				newchannel := TgTubeChanChannel{
-					YtUsername:        ssm[1],
-					TgChatId:          tg.F("%d", chatfullinfo.Id),
-					TgPerformer:       chatfullinfo.Title,
+					YtUsername: ssm[1],
+					TgChatId:   tg.F("%d", chatfullinfo.Id),
+					//TgPerformer:       chatfullinfo.Title,
 					TgSkipPhoto:       false,
 					TgSkipDescription: false,
 				}
@@ -410,9 +410,19 @@ func TgGetUpdates() (err error) {
 					return err
 				}
 
-				Config.Channels = append(Config.Channels, newchannel)
-				if err := Config.Put(); err != nil {
-					return fmt.Errorf("Config.Put %v", err)
+				addchannel := true
+				for _, c := range Config.Channels {
+					if c.YtUsername == newchannel.YtUsername {
+						addchannel = false
+						break
+					}
+				}
+
+				if addchannel {
+					Config.Channels = append(Config.Channels, newchannel)
+					if err := Config.Put(); err != nil {
+						return fmt.Errorf("Config.Put %v", err)
+					}
 				}
 
 			}
@@ -446,6 +456,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if len(channelslist.Items) == 0 {
 			return fmt.Errorf("channels/list empty result")
 		}
+
 		for _, c := range channelslist.Items {
 			tglog(
 				"DEBUG %s channel id [%s] title [%s] uploads playlist id <%v>",
@@ -456,6 +467,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("channels/list more than one result")
 		}
 
+		if channel.YtChannelId == "" {
+			channel.YtChannelId = channelslist.Items[0].Id
+		}
 		channel.YtPlaylistId = channelslist.Items[0].ContentDetails.RelatedPlaylists.Uploads
 		if err := Config.Put(); err != nil {
 			return fmt.Errorf("Config.Put %v", err)
