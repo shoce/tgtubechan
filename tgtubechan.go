@@ -288,14 +288,14 @@ func main() {
 		os.Exit(1)
 	}(sigterm)
 
-	ticker := time.NewTicker(Config.Interval)
-
 	for {
 		err := ConfigGet()
 		if err != nil {
 			perr("ERROR ConfigGet %v", err)
 			os.Exit(1)
 		}
+
+		ticker := time.NewTicker(Config.Interval)
 
 		err = TgGetUpdates()
 		if err != nil {
@@ -330,7 +330,6 @@ func main() {
 func TgGetUpdates() (err error) {
 
 	var updatesoffset int64
-
 	if len(Config.TgUpdateLog) > 0 {
 		updatesoffset = Config.TgUpdateLog[len(Config.TgUpdateLog)-1] + 1
 	}
