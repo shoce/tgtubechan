@@ -363,67 +363,75 @@ func TgGetUpdates() (err error) {
 		}
 
 		if u.MyChatMember.Date != 0 {
-			cm := u.MyChatMember
-			if tg.F("%d", cm.From.Id) != Config.TgBossId {
+			mcm := u.MyChatMember
+			tglog("@MyChatMember %#v", mcm)
+
+			if tg.F("%d", mcm.From.Id) != Config.TgBossId {
 				continue
 			}
-			if cm.Chat.Type != "channel" {
+			if mcm.Chat.Type != "channel" {
+				continue
+			}
+			if mcm.NewChatMember.User.Id != TgBotUserId {
 				continue
 			}
 
-			if cm.NewChatMember.User.Id != TgBotUserId {
-				continue
-			}
+			if mcm.NewChatMember.Status == "administrator" {
 
-			if cm.NewChatMember.Status == "administrator" {
-
-				chatfullinfo, err := tg.GetChat(cm.Chat.Id)
+				chatfullinfo, err := tg.GetChat(mcm.Chat.Id)
 				if err != nil {
-					return fmt.Errorf("tg.GetChat <%d> %v", cm.Chat.Id, err)
+					return fmt.Errorf("tg.GetChat <%d> %v", mcm.Chat.Id, err)
 				}
+				perr("DEBUG chatfullinfo.Description [%s]", chatfullinfo.Description)
 
 				// https://pkg.go.dev/regexp#Regexp.FindStringSubmatch
-				if ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description); len(ssm) == 2 {
-					perr("DEBUG YtChannelRe.FindStringSubmatch %#v", ssm)
+				ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description)
+				perr("DEBUG YtChannelRe.FindStringSubmatch chatfullinfo.Description %#v", ssm)
 
-					newchannel := TgTubeChanChannel{
-						YtUsername: ssm[1],
-						TgChatId:   tg.F("%d", cm.Chat.Id),
-						//TgPerformer:       chatfullinfo.Title,
-						TgSkipPhoto:       false,
-						TgSkipDescription: false,
-					}
-					tglog("DEBUG new channel %#v", newchannel)
-
-					addchannel := true
-					for i := range Config.Channels {
-						if Config.Channels[i].YtUsername == newchannel.YtUsername {
-							Config.Channels[i].Suspend = false
-							perr("channel @YtUsername [%s] @Suspend <%t>", Config.Channels[i].YtUsername, Config.Channels[i].Suspend)
-							addchannel = false
-						}
-					}
-					if addchannel {
-						tgmsg := tg.Bold(strings.ToUpper(chatfullinfo.Title)) + NL + NL + tg.Esc(chatfullinfo.Description)
-						if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
-							ChatId: fmt.Sprintf("%d", cm.Chat.Id),
-							Text:   tgmsg,
-						}); tgerr != nil {
-							perr("tg.SendMessage %v", tgerr)
-							return tgerr
-						}
-						Config.Channels = append(Config.Channels, newchannel)
-					}
-					if err := Config.Put(); err != nil {
-						return fmt.Errorf("Config.Put %v", err)
-					}
-
+				if len(ssm) != 2 {
+					continue
 				}
 
-			} else if cm.NewChatMember.Status == "left" {
+				newchannel := TgTubeChanChannel{
+					YtUsername: ssm[1],
+					TgChatId:   tg.F("%d", mcm.Chat.Id),
+					//TgPerformer:       mcm.Chat.Title,
+					TgSkipPhoto:       false,
+					TgSkipDescription: false,
+				}
+				tglog("DEBUG new channel %#v", newchannel)
+
+				addchannel := true
+				for i := range Config.Channels {
+					if Config.Channels[i].YtUsername == newchannel.YtUsername {
+						Config.Channels[i].Suspend = false
+						perr("channel @YtUsername [%s] @Suspend <%t>", Config.Channels[i].YtUsername, Config.Channels[i].Suspend)
+						addchannel = false
+					}
+				}
+				if addchannel {
+					tgmsg := tg.Bold(strings.ToUpper(mcm.Chat.Title)) + NL + NL + tg.Esc(chatfullinfo.Description)
+					if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
+						ChatId: fmt.Sprintf("%d", mcm.Chat.Id),
+						Text:   tgmsg,
+					}); tgerr != nil {
+						perr("tg.SendMessage %v", tgerr)
+						return tgerr
+					}
+					Config.Channels = append(Config.Channels, newchannel)
+				}
+				if err := Config.Put(); err != nil {
+					return fmt.Errorf("Config.Put %v", err)
+				}
+
+				if chatfullinfo.Photo.BigFileId == "" {
+					tglog("gonna set photo for chat [%s]", mcm.Chat.Title)
+				}
+
+			} else if mcm.NewChatMember.Status == "left" {
 
 				for i := range Config.Channels {
-					if Config.Channels[i].TgChatId == tg.F("%d", cm.Chat.Id) {
+					if Config.Channels[i].TgChatId == tg.F("%d", mcm.Chat.Id) {
 						Config.Channels[i].Suspend = true
 						perr("channel @YtUsername [%s] @Suspend <%t>", Config.Channels[i].YtUsername, Config.Channels[i].Suspend)
 						if err := Config.Put(); err != nil {
