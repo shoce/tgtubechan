@@ -313,7 +313,7 @@ func main() {
 			}
 		}
 
-		perr("DEBUG sleeping")
+		//perr("DEBUG sleeping")
 		<-ticker.C
 	}
 
