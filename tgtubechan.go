@@ -34,6 +34,7 @@ import (
 	"os/signal"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -129,6 +130,7 @@ var (
 
 	ENUFF = errors.New("ENUFF")
 
+	TgBotUserId    int64
 	TgTitleCleanRe *regexp.Regexp
 
 	YtChannelReText = `youtube\.com/@([-_A-Za-z0-9]+)`
@@ -143,6 +145,10 @@ func init() {
 
 	// https://pkg.go.dev/regexp
 	YtChannelRe = regexp.MustCompile(YtChannelReText)
+	if YtChannelRe.NumSubexp() != 1 {
+		perr("ERROR YtChannelRe regexp must have one subexpression")
+		os.Exit(1)
+	}
 
 	if v := os.Getenv("YssUrl"); v != "" {
 		Config.YssUrl = v
@@ -203,6 +209,14 @@ func ConfigGet() (err error) {
 
 	if Config.TgToken == "" {
 		return fmt.Errorf("TgToken empty")
+	}
+	if tgtokenparts := strings.Split(Config.TgToken, ":"); len(tgtokenparts) == 2 {
+		TgBotUserId, err = strconv.ParseInt(tgtokenparts[0], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid bot user id [%s]", tgtokenparts[0])
+		}
+	} else {
+		return fmt.Errorf("TgToken format must be [TgBotUserId:TgBotPassword]")
 	}
 
 	tg.ApiToken = Config.TgToken
@@ -292,7 +306,7 @@ func main() {
 
 		err = TgGetUpdates()
 		if err != nil {
-			perr("ERROR TgGetUpdates %v", err)
+			tglog("ERROR TgGetUpdates %v", err)
 		}
 
 		channels := Config.Channels
@@ -308,7 +322,8 @@ func main() {
 			} else {
 				perr("DEBUG %s", channel.YtUsername)
 			}
-			if err := processYtChannel(channel); err != nil {
+			err = processYtChannel(channel)
+			if err != nil {
 				tglog("ERROR %s %v", channel.YtUsername, err)
 			}
 		}
@@ -355,65 +370,65 @@ func TgGetUpdates() (err error) {
 			if cm.Chat.Type != "channel" {
 				continue
 			}
-			// TODO check User.Id equal to the bot's user id
-			//if cm.NewChatMember.User.Id !=
-			if cm.NewChatMember.Status != "administrator" {
+
+			if cm.NewChatMember.User.Id != TgBotUserId {
 				continue
 			}
 
-			var tgmsg string
+			if cm.NewChatMember.Status == "administrator" {
 
-			chatfullinfo, err := tg.GetChat(cm.Chat.Id)
-			if err != nil {
-				perr("ERROR tg.GetChat <%d> %v", cm.Chat.Id, err)
-				tgmsg = tg.Bold(cm.Chat.Title) + NL + NL + tg.Italic("no description")
-			} else {
-				tgmsg = tg.Bold(strings.ToUpper(chatfullinfo.Title)) + NL + NL + tg.Esc(chatfullinfo.Description)
-			}
+				chatfullinfo, err := tg.GetChat(cm.Chat.Id)
+				if err != nil {
+					return fmt.Errorf("tg.GetChat <%d> %v", cm.Chat.Id, err)
+				}
 
-			if _, err := tg.SendMessage(tg.SendMessageRequest{
-				ChatId: fmt.Sprintf("%d", cm.Chat.Id),
-				Text:   tgmsg,
-			}); err != nil {
-				perr("tg.SendMessage %v", err)
-				return err
-			}
-
-			if YtChannelRe.MatchString(chatfullinfo.Description) {
 				// https://pkg.go.dev/regexp#Regexp.FindStringSubmatch
-				ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description)
-				if ssm == nil || len(ssm) != 2 {
-					perr("ERROR YtChannelRe regexp is broken")
-					return fmt.Errorf("YtChannelRe regexp is broken FindStringSubmatch %#v", ssm)
-				}
-				newchannel := TgTubeChanChannel{
-					YtUsername: ssm[1],
-					TgChatId:   tg.F("%d", chatfullinfo.Id),
-					//TgPerformer:       chatfullinfo.Title,
-					TgSkipPhoto:       false,
-					TgSkipDescription: false,
-				}
-				perr("DEBUG new channel %#v", newchannel)
-				if _, err := tg.SendMessage(tg.SendMessageRequest{
-					ChatId: fmt.Sprintf("%d", cm.Chat.Id),
-					Text:   tg.Esc(tg.F("new channel %#v", newchannel)),
-				}); err != nil {
-					perr("tg.SendMessage %v", err)
-					return err
-				}
+				if ssm := YtChannelRe.FindStringSubmatch(chatfullinfo.Description); len(ssm) == 2 {
+					perr("DEBUG YtChannelRe.FindStringSubmatch %#v", ssm)
 
-				addchannel := true
-				for _, c := range Config.Channels {
-					if c.YtUsername == newchannel.YtUsername {
-						addchannel = false
-						break
+					newchannel := TgTubeChanChannel{
+						YtUsername: ssm[1],
+						TgChatId:   tg.F("%d", cm.Chat.Id),
+						//TgPerformer:       chatfullinfo.Title,
+						TgSkipPhoto:       false,
+						TgSkipDescription: false,
 					}
-				}
+					tglog("DEBUG new channel %#v", newchannel)
 
-				if addchannel {
-					Config.Channels = append(Config.Channels, newchannel)
+					addchannel := true
+					for i := range Config.Channels {
+						if Config.Channels[i].YtUsername == newchannel.YtUsername {
+							Config.Channels[i].Suspend = false
+							perr("channel @YtUsername [%s] @Suspend <%t>", Config.Channels[i].YtUsername, Config.Channels[i].Suspend)
+							addchannel = false
+						}
+					}
+					if addchannel {
+						tgmsg := tg.Bold(strings.ToUpper(chatfullinfo.Title)) + NL + NL + tg.Esc(chatfullinfo.Description)
+						if _, tgerr := tg.SendMessage(tg.SendMessageRequest{
+							ChatId: fmt.Sprintf("%d", cm.Chat.Id),
+							Text:   tgmsg,
+						}); tgerr != nil {
+							perr("tg.SendMessage %v", tgerr)
+							return tgerr
+						}
+						Config.Channels = append(Config.Channels, newchannel)
+					}
 					if err := Config.Put(); err != nil {
 						return fmt.Errorf("Config.Put %v", err)
+					}
+
+				}
+
+			} else if cm.NewChatMember.Status == "left" {
+
+				for i := range Config.Channels {
+					if Config.Channels[i].TgChatId == tg.F("%d", cm.Chat.Id) {
+						Config.Channels[i].Suspend = true
+						perr("channel @YtUsername [%s] @Suspend <%t>", Config.Channels[i].YtUsername, Config.Channels[i].Suspend)
+						if err := Config.Put(); err != nil {
+							return fmt.Errorf("Config.Put %v", err)
+						}
 					}
 				}
 
