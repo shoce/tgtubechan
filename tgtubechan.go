@@ -88,8 +88,7 @@ type TgTubeChanConfig struct {
 
 	Interval time.Duration `yaml:"Interval"`
 
-	TgApiUrl     string `yaml:"TgApiUrl"`     // "https://api.telegram.org" "http://tgbotserver:80"
-	TgApiUrlBase string `yaml:"TgApiUrlBase"` // "https://api.telegram.org" "http://tgbotserver:80"
+	TgApiUrl string `yaml:"TgApiUrl"` // "https://api.telegram.org" "http://tgbotserver:80"
 
 	TgToken  string `yaml:"TgToken"`
 	TgChatId string `yaml:"TgChatId"`
@@ -195,15 +194,9 @@ func ConfigGet() (err error) {
 	}
 
 	perr("TgApiUrl [%s]", Config.TgApiUrl)
-	perr("TgApiUrlBase [%s]", Config.TgApiUrlBase)
 	if Config.TgApiUrl == "" {
 		perr("ERROR TgApiUrl empty")
-		if Config.TgApiUrlBase != "" {
-			Config.TgApiUrl = Config.TgApiUrlBase
-			perr("TgApiUrl [%s]", Config.TgApiUrl)
-		} else {
-			os.Exit(1)
-		}
+		os.Exit(1)
 	}
 
 	tg.ApiUrl = Config.TgApiUrl
@@ -917,11 +910,17 @@ func perr(msg string, args ...interface{}) {
 	if strings.HasPrefix(msg, "DEBUG ") && !Config.DEBUG {
 		return
 	}
+	msgtext := msg
 	if len(args) > 0 {
-		fmt.Fprintf(os.Stderr, ts()+" "+msg+NL, args...)
-	} else {
-		fmt.Fprint(os.Stderr, ts()+" "+msg+NL)
+		msgtext = fmt.Sprintf(msgtext, args...)
 	}
+	if Config.TgToken != "" {
+		msgtext = strings.ReplaceAll(msgtext, Config.TgToken, "[Config.TgToken]")
+	}
+	if Config.YtKey != "" {
+		msgtext = strings.ReplaceAll(msgtext, Config.YtKey, "[Config.YtKey]")
+	}
+	fmt.Fprint(os.Stderr, ts()+SP+msgtext+NL)
 }
 
 func tglog(msg string, args ...interface{}) (err error) {
