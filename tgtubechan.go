@@ -62,6 +62,9 @@ const (
 
 	TgUpdateLogMaxSizeDefault = 12
 
+	IntervalDefault        = "1m11s"
+	YtCheckIntervalDefault = "1h11m11s"
+
 	MsgEmbeddingDisabled = "embedding of this video has been disabled"
 	MsgLoginRequired     = "login required to confirm your age"
 )
@@ -107,6 +110,9 @@ type TgTubeChanConfig struct {
 	YtKey        string `yaml:"YtKey"`
 	YtMaxResults int64  `yaml:"YtMaxResults"` // 50
 	YtThrottle   int64  `yaml:"YtThrottle"`   // 12
+
+	YtCheckInterval time.Duration `yaml:"YtCheckInterval"` // YtCheckIntervalDefault 1h11m11s
+	YtCheckLast     time.Time     `yaml:"YtCheckLast"`
 
 	YtUserAgent string `yaml:"YtUserAgent"` // "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15"
 
@@ -193,16 +199,18 @@ func ConfigGet() (err error) {
 		tg.DEBUG = true
 	}
 
-	perr("Interval <%v>", Config.Interval)
 	if Config.Interval == 0 {
-		perr("ERROR Interval empty")
-		os.Exit(1)
+		Config.Interval, err = time.ParseDuration(IntervalDefault)
+		if err != nil {
+			perr("ERROR time.ParseDuration IntervalDefault [%s] %v", IntervalDefault, err)
+			os.Exit(1)
+		}
 	}
+	perr("Interval <%s>", Config.Interval)
 
 	perr("TgApiUrl [%s]", Config.TgApiUrl)
 	if Config.TgApiUrl == "" {
-		perr("ERROR TgApiUrl empty")
-		os.Exit(1)
+		return fmt.Errorf("TgApiUrl empty")
 	}
 
 	tg.ApiUrl = Config.TgApiUrl
@@ -236,7 +244,7 @@ func ConfigGet() (err error) {
 	perr("TgUpdateLogMaxSize <%d>", Config.TgUpdateLogMaxSize)
 
 	if Config.TgPlaylistVideosInterval == 0 {
-		return fmt.Errorf("TgPlaylistVideosInterval empty")
+		Config.TgPlaylistVideosInterval = 7 * time.Second
 	}
 
 	if Config.TgAudioBitrateKbps == 0 {
@@ -272,6 +280,15 @@ func ConfigGet() (err error) {
 		Config.YtThrottle = 12
 	}
 	perr("YtThrottle <%d>", Config.YtThrottle)
+
+	if Config.YtCheckInterval == 0 {
+		Config.YtCheckInterval, err = time.ParseDuration(YtCheckIntervalDefault)
+		if err != nil {
+			perr("ERROR time.ParseDuration YtCheckIntervalDefault [%s] %v", YtCheckIntervalDefault, err)
+			os.Exit(1)
+		}
+	}
+	perr("YtCheckInterval <%s>", Config.YtCheckInterval)
 
 	perr("FfmpegPath [%s]", Config.FfmpegPath)
 	perr("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
@@ -309,23 +326,32 @@ func main() {
 			tglog("ERROR TgGetUpdates %v", err)
 		}
 
-		channels := Config.Channels
-		rand.Shuffle(len(channels), func(i, j int) {
-			channels[i], channels[j] = channels[j], channels[i]
-		})
+		if time.Since(Config.YtCheckLast) > Config.YtCheckInterval {
 
-		for jchannel, _ := range channels {
-			channel := &channels[jchannel]
-			if channel.Suspend {
-				perr("DEBUG %s suspended", channel.YtUsername)
-				continue
-			} else {
-				perr("DEBUG %s", channel.YtUsername)
+			channels := Config.Channels
+			rand.Shuffle(len(channels), func(i, j int) {
+				channels[i], channels[j] = channels[j], channels[i]
+			})
+
+			for jchannel, _ := range channels {
+				channel := &channels[jchannel]
+				if channel.Suspend {
+					perr("DEBUG %s suspended", channel.YtUsername)
+					continue
+				} else {
+					perr("DEBUG %s", channel.YtUsername)
+				}
+				err = processYtChannel(channel)
+				if err != nil {
+					tglog("ERROR %s %v", channel.YtUsername, err)
+				}
+
+				Config.YtCheckLast = time.Now()
+				if err := Config.Put(); err != nil {
+					perr("ERROR Config.Put %v", err)
+				}
 			}
-			err = processYtChannel(channel)
-			if err != nil {
-				tglog("ERROR %s %v", channel.YtUsername, err)
-			}
+
 		}
 
 		//perr("DEBUG sleeping")
