@@ -279,7 +279,7 @@ func ConfigGet() (err error) {
 	if Config.YtThrottle == 0 {
 		Config.YtThrottle = 12
 	}
-	perr("YtThrottle <%d>", Config.YtThrottle)
+	perr("DEBUG YtThrottle <%d>", Config.YtThrottle)
 
 	if Config.YtCheckInterval == 0 {
 		Config.YtCheckInterval, err = time.ParseDuration(YtCheckIntervalDefault)
@@ -289,18 +289,27 @@ func ConfigGet() (err error) {
 		}
 	}
 	perr("YtCheckInterval <%s>", Config.YtCheckInterval)
+	perr("YtCheckLast <%s>", Config.YtCheckLast)
 
 	perr("FfmpegPath [%s]", Config.FfmpegPath)
-	perr("FfmpegGlobalOptions (%+v)", Config.FfmpegGlobalOptions)
+	perr("FfmpegGlobalOptions %s", AtonListStrings(Config.FfmpegGlobalOptions))
 
-	perr("Channels (")
+	perr("DEBUG Channels (")
 	for _, channel := range Config.Channels {
-		perr("{ @Suspend <%v> @YtUsername [%s] @YtLast <%s> }", BTOI[channel.Suspend], channel.YtUsername, channel.YtLast)
+		perr("DEBUG { @Suspend <%d> @YtUsername [%s] @YtLast <%s> }", BTOI[channel.Suspend], channel.YtUsername, channel.YtLast)
 	}
-	perr(")")
+	perr("DEBUG )")
 
 	return nil
 
+}
+
+func AtonListStrings(ss []string) string {
+	var aa []string
+	for _, s := range ss {
+		aa = append(aa, "["+s+"]")
+	}
+	return "( " + strings.Join(aa, " ") + " )"
 }
 
 func main() {
