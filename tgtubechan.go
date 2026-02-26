@@ -202,8 +202,7 @@ func ConfigGet() (err error) {
 	if Config.Interval == 0 {
 		Config.Interval, err = time.ParseDuration(IntervalDefault)
 		if err != nil {
-			perr("ERROR time.ParseDuration IntervalDefault [%s] %v", IntervalDefault, err)
-			os.Exit(1)
+			return fmt.Errorf("time.ParseDuration IntervalDefault [%s] %v", IntervalDefault, err)
 		}
 	}
 	perr("Interval <%s>", Config.Interval)
@@ -284,8 +283,7 @@ func ConfigGet() (err error) {
 	if Config.YtCheckInterval == 0 {
 		Config.YtCheckInterval, err = time.ParseDuration(YtCheckIntervalDefault)
 		if err != nil {
-			perr("ERROR time.ParseDuration YtCheckIntervalDefault [%s] %v", YtCheckIntervalDefault, err)
-			os.Exit(1)
+			return fmt.Errorf("time.ParseDuration YtCheckIntervalDefault [%s] %v", YtCheckIntervalDefault, err)
 		}
 	}
 	perr("YtCheckInterval <%s>", Config.YtCheckInterval)
@@ -302,14 +300,6 @@ func ConfigGet() (err error) {
 
 	return nil
 
-}
-
-func AtonListStrings(ss []string) string {
-	var aa []string
-	for _, s := range ss {
-		aa = append(aa, "["+s+"]")
-	}
-	return "( " + strings.Join(aa, " ") + " )"
 }
 
 func main() {
@@ -949,6 +939,14 @@ type UserAgentTransport struct {
 func (uat *UserAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", uat.UserAgent)
 	return uat.Transport.RoundTrip(req)
+}
+
+func AtonListStrings(ss []string) string {
+	var aa []string
+	for _, s := range ss {
+		aa = append(aa, "["+s+"]")
+	}
+	return "( " + strings.Join(aa, " ") + " )"
 }
 
 func beats(td time.Duration) int {
