@@ -6,17 +6,14 @@ https://developers.google.com/youtube/v3/docs/playlistItems/list
 https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas
 
 https://core.telegram.org/bots/api
-
-
-go get github.com/kkdai/youtube/v2@master
-
-GoGet GoFmt GoBuildNull
-
-https://github.com/shoce/tgtubechan/actions
-
-TODO cache playlists
-
 */
+
+// https://github.com/shoce/tgtubechan/actions
+
+// go get github.com/kkdai/youtube/v2@master
+// GoGet GoFmt GoBuildNull
+
+// TODO cache playlists
 
 package main
 
@@ -51,7 +48,7 @@ import (
 	youtube "google.golang.org/api/youtube/v3"
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/shoce/tg"
+	tg "github.com/shoce/tg"
 )
 
 const (
@@ -181,8 +178,8 @@ func init() {
 			DeviceModel: "iPhone16,2",
 		}
 	*/
-	// WebClient AndroidClient IOSClient EmbeddedClient
-	ytdl.DefaultClient = ytdl.IOSClient
+	// WebClient AndroidClient AndroidVRClient IOSClient EmbeddedClient
+	//ytdl.DefaultClient = ytdl.IOSClient
 
 	rand.Seed(time.Now().UnixNano())
 
