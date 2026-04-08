@@ -1,12 +1,10 @@
 /*
-
 https://github.com/kkdai/youtube/v2/
-
 https://developers.google.com/youtube/v3/docs/playlistItems/list
 https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas
-
-https://core.telegram.org/bots/api
 */
+
+// https://core.telegram.org/bots/api
 
 // https://github.com/shoce/tgtubechan/actions
 
@@ -23,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -700,26 +697,30 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 
 		ytstreamthrottled := &ThrottledReader{Reader: ytstream, Bps: int64(audioFormat.Bitrate) * Config.YtThrottle}
 
-		// https://pkg.go.dev/bytes#Buffer
-		var audioBuf *bytes.Buffer
-		audioBuf = bytes.NewBuffer(nil)
+		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
+
+		audioSrc, err := os.Create(audioSrcFile)
+		if err != nil {
+			return fmt.Errorf("Create [%s] %v", audioSrcFile, err)
+		}
 
 		t0dl := time.Now()
-		if _, err = io.Copy(audioBuf, ytstreamthrottled); err != nil {
+		copywritten, err := io.Copy(audioSrc, ytstreamthrottled)
+		if err != nil {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
-		perr("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v> in <%v>",
-			audioBuf.Len()>>20, audioFormat.Bitrate>>10, vinfo.Duration, time.Now().Sub(t0dl).Truncate(time.Second),
-		)
-
-		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; audioBuf.Len() < expectsize/2 {
-			return fmt.Errorf("downloaded audio size is less than half of expected")
+		err = audioSrc.Close()
+		if err != nil {
+			perr("Close [%s] %v", audioSrcFile, err)
 		}
 
-		audioSrcFile := fmt.Sprintf("%s..m4a", audioName)
-		if err = ioutil.WriteFile(audioSrcFile, audioBuf.Bytes(), 0400); err != nil {
-			return fmt.Errorf("WriteFile %s %v", audioSrcFile, err)
+		perr("DEBUG downloaded audio size <%dmb> bitrate <%dkbps> duration <%v> in <%v>",
+			copywritten>>20, audioFormat.Bitrate>>10, vinfo.Duration, time.Now().Sub(t0dl).Truncate(time.Second),
+		)
+
+		if expectsize := int(vinfo.Duration.Seconds()) * audioFormat.Bitrate / 8; copywritten < int64(expectsize/2) {
+			return fmt.Errorf("downloaded audio size is less than half of expected")
 		}
 
 		audioFile := audioSrcFile
@@ -741,12 +742,11 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 		}
 
-		audioBytes, err := ioutil.ReadFile(audioFile)
+		audioSrc, err = os.Open(audioSrcFile)
 		if err != nil {
-			return fmt.Errorf("ReadFile %s %v", audioFile, err)
-		} else if err := os.Remove(audioFile); err != nil {
-			tglog("ERROR os.Remove %s %v", audioFile, err)
+			return fmt.Errorf("Open [%s] %v", audioSrcFile, err)
 		}
+		defer audioSrc.Close()
 
 		var thumbUrl string
 		if v.Thumbnails.Maxres != nil && v.Thumbnails.Maxres.Url != "" {
@@ -824,7 +824,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			Performer: channel.TgPerformer,
 			Title:     vtitle,
 			Duration:  vinfo.Duration,
-			Audio:     bytes.NewReader(audioBytes),
+			Audio:     audioSrc,
 			Thumb:     bytes.NewReader(thumbBytes),
 		}); err != nil {
 			return fmt.Errorf("ERROR tg.SendAudioFile %v", err)
