@@ -838,6 +838,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}
 		}
 
+		if err := os.Remove(audioSrcFile); err != nil {
+			perr("ERROR Remove [%s] %v", audioSrcFile, err)
+		}
+
 		audioCaption := tg.Esc(tg.F(
 			"%s"+NL+"%s %s"+NL+"youtu.be/%s %s",
 			vtitle, channel.TgPerformer, vpatime.Format("2006/01/02"), v.ResourceId.VideoId, vinfo.Duration,
