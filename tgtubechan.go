@@ -40,10 +40,10 @@ import (
 	"golang.org/x/exp/slices"
 	_ "golang.org/x/image/webp"
 
+	yaml "github.com/goccy/go-yaml"
 	ytdl "github.com/kkdai/youtube/v2"
 	youtubeoption "google.golang.org/api/option"
 	youtube "google.golang.org/api/youtube/v3"
-	yaml "gopkg.in/yaml.v3"
 
 	tg "github.com/shoce/tg"
 )
@@ -1025,7 +1025,7 @@ func (config *TgTubeChanConfig) Get() error {
 func (config *TgTubeChanConfig) Put() error {
 	//perr("DEBUG Config.Put %s %+v", config.YssUrl, config)
 
-	rbb, err := yaml.Marshal(config)
+	rbb, err := yaml.MarshalWithOptions(config, yaml.JSON(), yaml.Flow(false))
 	if err != nil {
 		return err
 	}
