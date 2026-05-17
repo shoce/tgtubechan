@@ -973,7 +973,7 @@ func perr(msg string, args ...interface{}) {
 	if strings.HasPrefix(msg, "DEBUG ") && !Config.DEBUG {
 		return
 	}
-	ts := time.Now()
+	tnow := time.Now()
 	msgtext := msg
 	if len(args) > 0 {
 		msgtext = fmt.Sprintf(msgtext, args...)
@@ -984,7 +984,7 @@ func perr(msg string, args ...interface{}) {
 	if Config.YtKey != "" {
 		msgtext = strings.ReplaceAll(msgtext, Config.YtKey, "[Config.YtKey]")
 	}
-	fmt.Fprint(os.Stderr, "<"+fmttime(ts)+">"+SP+msgtext+NL)
+	fmt.Fprint(os.Stderr, "<"+fmttime(tnow)+">"+SP+msgtext+NL)
 }
 
 func tglog(msg string, args ...interface{}) (err error) {
