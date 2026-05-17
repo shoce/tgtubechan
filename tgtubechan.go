@@ -119,8 +119,6 @@ type TgTubeChanConfig struct {
 var (
 	Config TgTubeChanConfig
 
-	TZIST = time.FixedZone("IST", 330*60)
-
 	Ctx context.Context
 
 	HttpClient = &http.Client{}
@@ -137,6 +135,9 @@ var (
 	YtChannelRe     *regexp.Regexp
 
 	BTOI = map[bool]int{false: 0, true: 1}
+
+	F    = fmt.Sprintf
+	pout = fmt.Print
 )
 
 func init() {
@@ -954,19 +955,25 @@ func beats(td time.Duration) int {
 	return int(td / BEAT)
 }
 
-func ts() string {
-	tnow := time.Now().In(TZIST)
-	return fmt.Sprintf(
-		"%d%02d%02d:%02d%02dॐ",
-		tnow.Year()%1000, tnow.Month(), tnow.Day(),
-		tnow.Hour(), tnow.Minute(),
+func fmttime(t time.Time) string {
+	ts := F(
+		"%d:%02d%02d:%02d%02d",
+		t.Year()%1000, t.Month(), t.Day(), t.Hour(), t.Minute(),
 	)
+	// https://pkg.go.dev/time#Time.Zone
+	if _, tzoffset := t.Zone(); tzoffset == 0 {
+		ts += "+"
+	} else {
+		ts += "-"
+	}
+	return ts
 }
 
 func perr(msg string, args ...interface{}) {
 	if strings.HasPrefix(msg, "DEBUG ") && !Config.DEBUG {
 		return
 	}
+	ts := time.Now()
 	msgtext := msg
 	if len(args) > 0 {
 		msgtext = fmt.Sprintf(msgtext, args...)
@@ -977,7 +984,7 @@ func perr(msg string, args ...interface{}) {
 	if Config.YtKey != "" {
 		msgtext = strings.ReplaceAll(msgtext, Config.YtKey, "[Config.YtKey]")
 	}
-	fmt.Fprint(os.Stderr, ts()+SP+msgtext+NL)
+	fmt.Fprint(os.Stderr, "<"+fmttime(ts)+">"+SP+msgtext+NL)
 }
 
 func tglog(msg string, args ...interface{}) (err error) {
