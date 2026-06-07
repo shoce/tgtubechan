@@ -704,6 +704,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 		if err != nil {
 			return fmt.Errorf("Create [%s] %v", audioSrcFile, err)
 		}
+		defer audioSrc.Close()
 
 		t0dl := time.Now()
 		copywritten, err := io.Copy(audioSrc, ytstreamthrottled)
@@ -711,8 +712,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			return fmt.Errorf("copy stream %v", err)
 		}
 
-		err = audioSrc.Close()
-		if err != nil {
+		if err = audioSrc.Close(); err != nil {
 			perr(F("Close [%s] %v", audioSrcFile, err))
 		}
 
@@ -838,6 +838,10 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			}); err != nil {
 				perr(F("ERROR tg.DeleteMessage %v", err))
 			}
+		}
+
+		if err = audioSrc.Close(); err != nil {
+			perr(F("Close [%s] %v", audioSrcFile, err))
 		}
 
 		if err := os.Remove(audioSrcFile); err != nil {
