@@ -867,13 +867,9 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 			if len(v.Description) < 4000 {
 				spp = []string{v.Description}
 			} else {
-				sep := NL+NL
+				sep := NL
 				var sp string
 				srs := strings.Split(v.Description, sep)
-				if len(srs) == 1 {
-					sep = NL
-					srs = strings.Split(v.Description, sep)
-				}
 				for i, s := range srs {
 					sp += s + sep
 					if i == len(srs)-1 || len(sp)+len(srs[i+1]) > 4000 {
@@ -887,7 +883,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				if strings.TrimSpace(sp) == "" {
 					continue
 				}
-				perr(F("DEBUG spp <%d> [%s]", len(sp), sp))
+				//perr(F("DEBUG spp <%d> [%s]", len(sp), sp))
 				_, err = tg.SendMessage(tg.SendMessageRequest{
 					ChatId: channel.TgChatId,
 					Text:   tg.Esc(sp),
