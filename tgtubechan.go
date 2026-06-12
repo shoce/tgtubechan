@@ -887,6 +887,7 @@ func processYtChannel(channel *TgTubeChanChannel) (err error) {
 				if strings.TrimSpace(sp) == "" {
 					continue
 				}
+				perr(F("DEBUG spp <%d> [%s]", len(sp), sp))
 				_, err = tg.SendMessage(tg.SendMessageRequest{
 					ChatId: channel.TgChatId,
 					Text:   tg.Esc(sp),
